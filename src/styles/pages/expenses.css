@@ -1,0 +1,25 @@
+.exp-toolbar{justify-content:space-between;gap:12px}
+.exp-filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1}
+.date-range{display:grid;grid-template-columns:150px auto 150px;align-items:center;gap:8px;flex:none}
+.date-range .dp-btn{display:flex !important;align-items:center !important;justify-content:space-between !important;width:150px !important;max-width:150px !important;min-width:150px !important;height:42px !important;max-height:42px !important;min-height:42px !important;padding:0 12px !important;box-sizing:border-box !important;margin:0 !important;overflow:hidden !important}
+.date-range .dp-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.dr-sep{color:var(--muted);font-weight:700}
+.exp-filters select{flex:0 0 190px;width:190px}
+@media (max-width:820px){
+  .exp-filters{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;width:100%}
+  .date-range{width:100%;grid-template-columns:1fr auto 1fr}
+  .date-range .dp-btn{width:100% !important;max-width:none !important;min-width:0 !important}
+  .exp-filters select{width:100%;flex:none}
+  .exp-add{display:none}
+}
+.proof-add{display:flex;align-items:center;gap:12px;width:100%;padding:14px;border:1.5px dashed var(--line-strong);border-radius:var(--r-md);background:var(--input-bg);text-align:left;transition:background .15s,border-color .2s}
+.proof-add:hover{background:var(--hover);border-color:var(--brand-2)}
+.proof-add svg{width:24px;height:24px;color:var(--brand-ink);flex:none}
+.proof-add b{display:block} .proof-add small{color:var(--muted)}
+.proof-prev{display:flex;gap:12px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--input-bg)}
+.proof-prev img{width:84px;height:84px;object-fit:cover;border-radius:10px;flex:none}
+.proof-btns{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.proof-img{display:block;width:100%;max-height:220px;object-fit:cover;border-radius:var(--r-md);margin:12px 0 16px;cursor:zoom-in;border:1px solid var(--line)}
+.proof-full{display:block;width:100%;max-height:70vh;object-fit:contain;border-radius:var(--r-md)}
+.has-photo{display:inline-grid;vertical-align:middle;margin-left:8px;color:var(--brand-ink)}
+.has-photo svg{width:15px;height:15px}

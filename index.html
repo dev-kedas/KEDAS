@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e4d3a">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<title>Kas Organisasi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="is-auth">
+<div id="landing"></div>
+<div id="auth"><div class="auth-shell">
+  <div class="auth-main"><div class="auth-wrap">
+    <div class="auth-card" id="authCard"></div>
+    <p class="auth-foot">Data tersimpan aman di server dan tersinkron di semua perangkat.</p>
+  </div></div>
+</div></div>
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-title">
+        <h1 id="pageTitle">Dashboard</h1>
+        <p id="pageSub" class="muted"></p>
+      </div>
+      <div class="notif-wrap">
+        <button class="icon-btn" id="bellBtn" aria-label="Notifikasi" aria-expanded="false"></button>
+        <div class="notif-panel" id="notifPanel" hidden></div>
+      </div>
+    </header>
+    <main id="view"></main>
+  </div>
+  <nav class="bottomnav" id="bottomnav" aria-label="Menu utama"></nav>
+</div>
+<dialog id="dlg"></dialog>
+<dialog id="confirmDlg" class="small"></dialog>
+<div id="toasts" aria-live="polite"></div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

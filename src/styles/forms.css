@@ -1,0 +1,83 @@
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field label{font-weight:600;font-size:13px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.input{appearance:none;-webkit-appearance:none;width:100%;min-height:42px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-md);background-color:var(--input-bg);color:var(--ink);transition:border-color .15s,box-shadow .15s,background-color .15s}
+.input:hover{border-color:var(--line-strong)}
+.input:focus,.input:focus-visible{outline:0;border-color:var(--brand-2);box-shadow:0 0 0 4px var(--ring)}
+.input::placeholder{color:#9aaaa2;opacity:1}
+.input:disabled{background:var(--bg);color:var(--muted);cursor:not-allowed}
+.input:-webkit-autofill{-webkit-box-shadow:0 0 0 100px var(--input-bg) inset;-webkit-text-fill-color:var(--ink)}
+textarea.input{resize:none;min-height:72px;line-height:1.5}
+
+input[type=number].input{-moz-appearance:textfield;appearance:textfield}
+input[type=number].input::-webkit-inner-spin-button,input[type=number].input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+
+input[type=search].input::-webkit-search-decoration{-webkit-appearance:none}
+input[type=search].input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none;width:16px;height:16px;cursor:pointer;opacity:.55;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230e4d3a' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E") center/contain no-repeat}
+input[type=search].input::-webkit-search-cancel-button:hover{opacity:1}
+
+.dp-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;cursor:pointer;min-width:0;height:42px;padding:0 12px;line-height:1.2;white-space:nowrap}
+.dp-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dp-btn.empty span{color:var(--muted);font-weight:500}
+.dp-btn:not(.empty){border-color:color-mix(in srgb,var(--brand-2) 40%,var(--line));background-color:color-mix(in srgb,var(--brand) 5%,var(--input-bg))}
+.dp-btn:not(.empty) span{font-weight:600}
+.dp-btn svg{width:18px;height:18px;flex:none;color:var(--brand-ink)}
+.dp-btn[aria-expanded=true]{border-color:var(--brand-2);box-shadow:0 0 0 4px var(--ring)}
+.dp-pop{inset:auto;margin:0;width:292px;padding:12px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);color:var(--ink);box-shadow:0 22px 50px -18px rgba(0,0,0,.45);animation:pop .16s ease-out}
+.dp-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px}
+.dp-title{flex:1;padding:7px 10px;border:0;border-radius:var(--r-sm);background:none;font-weight:800;font-size:14.5px;text-transform:capitalize;transition:background .15s}
+.dp-title:hover{background:var(--bg)}
+.dp-nav{width:34px;height:34px;border:0;border-radius:50%;background:none;display:grid;place-items:center;color:var(--ink-2);transition:background .15s}
+.dp-nav:hover{background:var(--bg)}
+.dp-nav svg{width:16px;height:16px}
+.dp-nav[data-dp=pm] svg,.dp-nav[data-dp=py] svg{transform:scaleX(-1)}
+.dp-week,.dp-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.dp-week span{text-align:center;font-size:11.5px;font-weight:700;color:var(--muted);padding:4px 0}
+.dp-days button,.dp-months button{border:0;background:none;border-radius:50%;aspect-ratio:1;font-weight:600;font-size:13.5px;transition:background .12s,color .12s}
+.dp-days button:hover:not(:disabled),.dp-months button:hover{background:var(--brand-soft)}
+.dp-days button.today{box-shadow:inset 0 0 0 1.5px var(--brand-2);color:var(--brand-ink)}
+.dp-days button.on,.dp-months button.on{background:var(--brand);color:#fff;box-shadow:none}
+.dp-days button:disabled{color:var(--line-strong);cursor:not-allowed}
+.dp-months{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.dp-months button{aspect-ratio:auto;border-radius:var(--r-md);padding:12px 0}
+.dp-foot{display:flex;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.dp-foot button{border:0;background:none;padding:6px 10px;border-radius:var(--r-sm);font-weight:700;font-size:13px;color:var(--brand-ink)}
+.dp-foot button:hover:not(:disabled){background:var(--brand-soft)}
+.dp-foot button:disabled{color:var(--line-strong)}
+
+select.input{padding-right:40px;cursor:pointer;text-overflow:ellipsis;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230e4d3a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 13px center;background-size:16px}
+select.input option{background:var(--surface);color:var(--ink);padding:10px 12px;font-weight:500}
+select.input option:checked{background:var(--brand-soft);color:var(--brand-ink);font-weight:700}
+
+@supports (appearance:base-select){
+  select.input,select.input::picker(select){appearance:base-select}
+  select.input{background-image:none;padding-right:12px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  select.input::picker-icon{content:"";width:16px;height:16px;flex:none;transition:rotate .2s;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230e4d3a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") center/16px no-repeat}
+  select.input:open::picker-icon{rotate:180deg}
+  select.input::picker(select){margin-block:6px;padding:6px;min-width:anchor-size(width);max-height:min(320px,60vh);border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);box-shadow:0 22px 50px -18px rgba(0,0,0,.4);
+    opacity:0;transform:translateY(-6px);transition:opacity .16s,transform .16s,overlay .16s allow-discrete,display .16s allow-discrete}
+  select.input::picker(select):popover-open{opacity:1;transform:none}
+  @starting-style{select.input::picker(select):popover-open{opacity:0;transform:translateY(-6px)}}
+  select.input option{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;font-size:14px;cursor:pointer;transition:background .12s}
+  select.input option:hover,select.input option:focus-visible{background:var(--bg);outline:0}
+  select.input option:checked{background:var(--brand-soft);color:var(--brand-ink);font-weight:700}
+  select.input option::checkmark{order:1;margin-left:auto;content:"";width:16px;height:16px;flex:none;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230e4d3a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5 9-10'/%3E%3C/svg%3E") center/16px no-repeat}
+}
+
+.money{position:relative}
+.money>span{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-weight:700;color:var(--muted);pointer-events:none;transition:color .15s}
+.money:focus-within>span{color:var(--brand-ink)}
+.money .input{padding-left:42px;font-weight:600}
+html[data-mode=dark] input[type=search].input::-webkit-search-cancel-button{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9cdc3' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E")}
+html[data-mode=dark] select.input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9cdc3' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")}
+@supports (appearance:base-select){
+  html[data-mode=dark] select.input{background-image:none}
+  html[data-mode=dark] select.input::picker-icon{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9cdc3' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")}
+  html[data-mode=dark] select.input option::checkmark{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9cdc3' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5 9-10'/%3E%3C/svg%3E")}
+}

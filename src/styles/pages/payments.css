@@ -1,0 +1,31 @@
+.pay-status{width:auto}
+
+.pay-sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.pay-sum div{padding:10px 14px;border-radius:var(--r-md);background:var(--gold-soft)}
+.pay-sum small{display:block;color:var(--muted);font-size:12px;font-weight:600}
+.pay-sum b{font-size:16px;font-weight:800}
+.pay-sum .bad{background:var(--bad-soft)}
+.pay-sum .bad b{color:var(--bad)}
+.pay-sum .ok{background:var(--ok-soft)}
+.pay-sum .ok b{color:var(--ok)}
+
+table.pay tbody tr{cursor:pointer}
+table.pay tbody tr:focus-visible{outline-offset:-2px;border-radius:var(--r-md)}
+table.pay td.go{width:44px;color:var(--muted)}
+table.pay td.go svg{width:18px;height:18px;transition:transform .15s,color .15s}
+table.pay tr:hover td.go svg{transform:translateX(3px);color:var(--brand)}
+@media (min-width:821px){
+  table.pay th,table.pay td{text-align:center}
+  table.pay th:first-child,table.pay td:first-child{text-align:left}
+}
+
+@media (max-width:820px){
+  .pay-toolbar{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+  .pay-filter .seg{display:flex;width:100%}
+  .pay-filter .seg button{flex:1;padding:6px 6px;font-size:13px}
+  .pay-toolbar .grow{min-width:0}
+  .pay-status{width:100%}
+  .pay-sum div{padding:9px 10px}
+  .pay-sum b{font-size:14px}
+  table.pay td.go{display:none}
+}
