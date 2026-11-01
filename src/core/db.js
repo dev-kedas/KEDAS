@@ -2,6 +2,7 @@ import { sb } from './supabase.js';
 import { S, replace, normalize, emptyState } from './store.js';
 import { getSession, setSession, clearSession } from './session.js';
 import { genCode } from './utils.js';
+import { unlinkPush } from './push.js';
 
 export function errMsg(e) {
   const m = String((e && (e.message || e.error_description)) || e || '');
@@ -47,12 +48,13 @@ async function fetchAll(table, cols, classId) {
 }
 
 export async function loadAll(classId) {
-  const [cls, students, payments, expenses, reads] = await Promise.all([
+  const [cls, students, payments, expenses, reads, bcs] = await Promise.all([
     sb.from('classes').select('id, code, settings').eq('id', classId).maybeSingle(),
     fetchAll('students', 'id, name', classId),
     fetchAll('payments', PAY_COLS, classId),
     fetchAll('expenses', EXP_COLS, classId),
     sb.from('notif_reads').select('notif_id'),
+    sb.from('broadcasts').select('id, title, body, created_at').eq('class_id', classId).order('created_at', { ascending: false }).limit(30),
   ]);
   if (cls.error) throw cls.error;
   if (!cls.data) return false;
@@ -63,6 +65,8 @@ export async function loadAll(classId) {
     payments: payments.map(toPay),
     expenses: expenses.map(toExp),
     readNotifs: reads.data.map(r => r.notif_id),
+    // kalau tabel broadcasts belum dibuat (schema_update2.sql belum dijalankan), aplikasi tetap jalan
+    broadcasts: bcs.error ? [] : bcs.data.map(r => ({ id: r.id, title: r.title, body: r.body || '', ts: Date.parse(r.created_at) })),
   }));
   return true;
 }
@@ -87,6 +91,7 @@ export async function bootSession() {
 
 export async function signOutAll() {
   stopRealtime();
+  await unlinkPush();
   try { await sb.auth.signOut({ scope: 'local' }); } catch { }
   clearSession(); replace(emptyState()); photoCache.clear();
 }
@@ -238,7 +243,34 @@ export function markRead(ids) {
     .then(() => { }, () => { });
 }
 
+// Kirim pengumuman: disimpan (muncul di lonceng siswa) + dikirim sebagai notifikasi HP.
+export async function sendBroadcast({ title, body, studentIds }) {
+  const { data, error } = await sb.functions.invoke('send-push', { body: { title, body, studentIds } });
+  if (error) {
+    let m = '';
+    try { m = (await error.context.json()).error; } catch { }
+    if (!m && /failed to send|not found|404|relay/i.test(String(error.message))) m = 'Fungsi send-push belum dipasang di Supabase.';
+    throw new Error(m || error.message || 'Gagal mengirim notifikasi.');
+  }
+  if (data && data.error) throw new Error(data.error);
+  await loadAll(cid());
+  return data;
+}
 
+// id siswa yang sudah mengaktifkan notifikasi HP (untuk info jangkauan di dialog kirim).
+export async function pushReach() {
+  const id = cid();
+  const [subs, mem] = await Promise.all([
+    sb.from('push_subscriptions').select('user_id').eq('class_id', id),
+    sb.from('class_members').select('user_id, student_id').eq('class_id', id),
+  ]);
+  if (subs.error) throw subs.error;
+  if (mem.error) throw mem.error;
+  const users = new Set(subs.data.map(s => s.user_id));
+  return new Set(mem.data.filter(m => users.has(m.user_id)).map(m => m.student_id));
+}
+
+// Ganti seluruh isi (Muat Excel, Mulai dari kosong, Data contoh) dalam satu transaksi di server.
 export async function replaceAll({ students, payments, expenses }) {
   const map = new Map(students.map(s => [s.id, crypto.randomUUID()]));
   must(await sb.rpc('replace_class_data', {
@@ -263,7 +295,7 @@ export function startRealtime(cb) {
   stopRealtime();
   onRemote = cb;
   channel = sb.channel('kedas-' + cid());
-  ['classes', 'students', 'payments', 'expenses'].forEach(table => channel.on('postgres_changes', { event: '*', schema: 'public', table }, ping));
+  ['classes', 'students', 'payments', 'expenses', 'broadcasts'].forEach(table => channel.on('postgres_changes', { event: '*', schema: 'public', table }, ping));
   channel.subscribe();
   document.addEventListener('visibilitychange', onVis);
 }

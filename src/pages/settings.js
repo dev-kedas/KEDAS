@@ -10,6 +10,7 @@ import { logout } from './auth.js';
 import { fillQr, shareQr, downloadQr } from '../core/qr.js';
 import { toXlsx, fromXlsx } from '../core/backup.js';
 import { compute } from '../core/calc.js';
+import { pushCard } from './broadcast.js';
 
 let tab = 'user';
 let shownTab = 'user';
@@ -51,6 +52,7 @@ function userSection() {
     <div class="card"><h2>Akun</h2>
       <div class="who"><span class="avatar">${esc(initials(userName() || '?'))}</span><div><b>${esc(userName())}</b><small>${isAdmin() ? 'Admin organisasi' : 'anggota'} · ${esc(S.settings.className)}</small></div></div>
       <button class="btn" data-act="logout">${ic('logout')}Keluar</button></div>
+    ${pushCard()}
   </div>
   <div class="card"><h2>Tampilan</h2>
     <div class="field"><label>Tema yang dipakai</label>

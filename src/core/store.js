@@ -4,12 +4,13 @@ export const classDefaults = () => ({ theme: { mode: 'light', accent: 'green', f
 export function normalize(d) {
   const df = classDefaults();
   d.readNotifs = d.readNotifs || [];
+  d.broadcasts = d.broadcasts || [];
   d.settings = { ...df, ...d.settings, theme: { ...df.theme, ...(d.settings && d.settings.theme) } };
   return d;
 }
 export const emptyState = () => normalize({
   settings: { className: '', mode: 'weekly', nominal: 5000, startDate: iso(todayD()), openingBalance: 0, reminderDays: 2, targetName: '', targetAmount: 0, classCode: '' },
-  students: [], payments: [], expenses: [], readNotifs: [],
+  students: [], payments: [], expenses: [], readNotifs: [], broadcasts: [],
 });
 export function seed() {
   const t = todayD();

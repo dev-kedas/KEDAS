@@ -4,9 +4,17 @@ import { notifications } from '../core/calc.js';
 import { openDlg } from '../core/ui.js';
 import { isAdmin, getSession, userName } from '../core/session.js';
 
+const bcastNotifs = () => (S.broadcasts || []).map(b => ({ id: 'b|' + b.id, type: 'info', title: b.title, text: b.body, ts: b.ts, bc: true }));
 export function visibleNotifs(c) {
   const all = notifications(c), s = getSession();
-  return isAdmin() ? all : all.filter(n => s && n.sid === s.studentId);
+  if (isAdmin()) return all;
+  return [...bcastNotifs(), ...all.filter(n => s && n.sid === s.studentId)];
+}
+function ago(ts) {
+  const m = Math.max(0, Math.round((Date.now() - ts) / 60000));
+  if (m < 1) return 'baru saja'; if (m < 60) return m + ' menit lalu';
+  const h = Math.round(m / 60); if (h < 24) return h + ' jam lalu';
+  const d = Math.round(h / 24); return d < 7 ? d + ' hari lalu' : fmt(new Date(ts));
 }
 
 export function closeNotif() {
@@ -59,7 +67,7 @@ const syncIndicators = (animate = true) => {
 window.addEventListener('resize', () => syncIndicators(false));
 export function trackSidebar() { const t0 = performance.now(); (function f() { syncIndicators(false); if (performance.now() - t0 < 360) requestAnimationFrame(f); })(); }
 
-const KIND = { tunggak: 'alert', tempo: 'clock', belum: 'wallet' };
+const KIND = { tunggak: 'alert', tempo: 'clock', belum: 'wallet', info: 'bell' };
 
 export function renderShell(c, pages, current) {
   const list = Object.values(pages);
@@ -84,12 +92,12 @@ export function renderShell(c, pages, current) {
   $('#pageSub').textContent = `${S.settings.className} · ${fmt(todayD(), { weekday: 'long', day: 'numeric', month: 'long' })}`;
   document.title = `${pages[current].title} · Kas Organisasi`;
 
-  const ns = visibleNotifs(c), ids = new Set(notifications(c).map(n => n.id));
+  const ns = visibleNotifs(c), ids = new Set([...notifications(c).map(n => n.id), ...bcastNotifs().map(n => n.id)]);
   const pruned = S.readNotifs.filter(id => ids.has(id));
   if (pruned.length !== S.readNotifs.length) S.readNotifs = pruned;
   const unread = ns.filter(n => !S.readNotifs.includes(n.id)).length;
   $('#bellBtn').innerHTML = ic('bell') + (unread ? `<span class="badge">${unread > 99 ? '99+' : unread}</span>` : '');
   $('#notifPanel').innerHTML = `<div class="np-head"><b>Notifikasi${unread ? ` (${unread} baru)` : ''}</b>${unread ? `<button class="np-read" data-act="readall" aria-label="Tandai semua dibaca" title="Tandai semua dibaca">${ic('checks')}</button>` : ''}</div>` +
-    (ns.length ? ns.map(n => `<button class="np-item ${S.readNotifs.includes(n.id) ? '' : 'unread'}" data-act="notif" data-id="${esc(n.id)}" data-sid="${n.sid}"><span class="np-dot ${n.type}">${ic(KIND[n.type])}</span><span><b>${esc(n.title)}</b><p>${esc(n.text)}</p><p><strong>${rp(n.sisa)}</strong> · jatuh tempo ${fmt(n.due)}</p></span></button>`).join('')
+    (ns.length ? ns.map(n => `<button class="np-item ${S.readNotifs.includes(n.id) ? '' : 'unread'}" data-act="notif" data-id="${esc(n.id)}" data-sid="${n.sid || ''}"><span class="np-dot ${n.type}">${ic(KIND[n.type])}</span><span><b>${esc(n.title)}</b>${n.bc ? `${n.text ? `<p>${esc(n.text)}</p>` : ''}<p class="np-time">${ago(n.ts)}</p>` : `<p>${esc(n.text)}</p><p><strong>${rp(n.sisa)}</strong> · jatuh tempo ${fmt(n.due)}</p>`}</span></button>`).join('')
       : `<div class="np-empty">${ic('check', 'width="32" height="32"')}<p>${isAdmin() ? 'Semua pembayaran aman. Tidak ada pengingat.' : 'Iuranmu aman. Tidak ada pengingat.'}</p></div>`);
 }

@@ -10,7 +10,7 @@ import { initLanding, renderLanding } from './landing.js';
 import { fillQr, downloadQr, shareQr } from '../core/qr.js';
 
 const norm = s => String(s || '').toUpperCase().replace(/[\s-]/g, '');
-let onEnter = () => {}, step = 'choose', token = 0, created = null, originVal = 'create', pending = null;
+let onEnter = () => {}, step = 'choose', token = 0, created = null, originVal = 'create', pending = null, shareNotice = false;
 const setupUser = () => { const s = getSession(); return s && s.role === 'admin' && !s.classId ? s : null; };
 
 export const initAuth = o => { onEnter = o.onEnter; bind(); initLanding({ onOpen: openAuth }); };
@@ -48,6 +48,15 @@ function openAuth(to = 'choose', ev) {
   t.finished.finally(() => { card.style.viewTransitionName = ''; root.classList.remove('vt-auth'); });
 }
 export async function logout() { closeDlg(); closeNotif(); await db.signOutAll(); pending = null; showAuth(); }
+// Dibuka dari link bagikan: kode sudah ada di link, jadi langsung minta pilih nama siswa.
+export async function showShareLogin(code) {
+  stopScan(); document.body.classList.add('is-auth'); document.body.classList.remove('show-landing', 'booting'); applyTheme();
+  try {
+    const info = await db.previewClass(code);
+    if (!info) { toast('Link tidak valid, atau kode organisasi sudah diganti.'); return showAuth(); }
+    pending = { ...info, code }; shareNotice = true; go('pick', false);
+  } catch (e) { toast(db.errMsg(e)); showAuth(); }
+}
 export function showSetup() { document.body.classList.add('is-auth'); document.body.classList.remove('show-landing'); applyTheme(); go('create', false); }
 
 const back = to => to === 'home'
@@ -82,8 +91,9 @@ const STEPS = {
     <p class="err" id="a-err" role="alert"></p>`,
 
   pick: () => `${back('code')}<div class="verified">${ic('check')}<span>organisasi terverifikasi · <b>${esc(pending ? pending.name || '' : '')}</b></span></div>
-    <h2>Kamu anggota yang mana?</h2><p class="auth-sub">Pilih namamu dari daftar organisasi.</p>
-    <form id="pickForm"><div id="pickBox"><div class="skel" aria-label="Memuat daftar anggota"></div><p class="skel-txt">Memuat daftar anggota…</p></div><p class="err" id="a-err" role="alert"></p>${submitBtn('Masuk', 'disabled id="pickGo"')}</form>`,
+    ${shareNotice ? `<div class="share-note">${ic('lock')}<span>Kamu membuka link kas. Masuk dulu sebagai siswa organisasi ini, lalu kamu langsung dibawa ke dashboard.</span></div>` : ''}
+    <h2>Kamu siswa yang mana?</h2><p class="auth-sub">Pilih namamu dari daftar organisasi.</p>
+    <form id="pickForm"><div id="pickBox"><div class="skel" aria-label="Memuat daftar siswa"></div><p class="skel-txt">Memuat daftar siswa…</p></div><p class="err" id="a-err" role="alert"></p>${submitBtn('Masuk', 'disabled id="pickGo"')}</form>`,
 
   create: () => { const su = setupUser(); return `${su ? '' : back('home')}<h2>Buat organisasi baru</h2><p class="auth-sub">${su ? `Kamu masuk sebagai <b>${esc(su.email || '')}</b>. Tinggal buat organisasinya.` : 'Kamu akan jadi admin. anggota ditambahkan setelah organisasi dibuat.'}</p>
     <form id="createForm" novalidate autocomplete="off">
@@ -120,7 +130,7 @@ const DEPTH = { choose: 0, code: 0, create: 0, admin: 1, scan: 1, pick: 1, creat
 function go(to, anim = true) {
   const card = $('#authCard'), old = card.firstElementChild, h0 = card.offsetHeight;
   const dir = (DEPTH[to] || 0) >= (DEPTH[step] || 0) ? 1 : -1;
-  step = to; token++; stopScan();
+  step = to; token++; stopScan(); if (to !== 'pick') shareNotice = false;
   card.innerHTML = `<div class="auth-step">${STEPS[to]()}</div>`;
   const cur = card.firstElementChild;
   if (anim && old && h0 && !reducedMotion()) {

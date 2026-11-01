@@ -1,4 +1,27 @@
-node_modules
-dist
-.env.local
-.env*.local
+# dependencies & build
+node_modules/
+dist/
+.vite/
+
+# secrets & env (jangan pernah di-commit)
+.env
+.env.*
+*.env
+push-secrets.env
+*.pem
+*.key
+
+# hosting & tooling
+.vercel/
+.netlify/
+supabase/.temp/
+supabase/.branches/
+
+# logs, editor, OS
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+conflicts.txt.env.example

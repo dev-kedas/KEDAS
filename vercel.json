@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/s/:type/:code", "destination": "/api/share?type=:type&code=:code" }
+  ]
+}
