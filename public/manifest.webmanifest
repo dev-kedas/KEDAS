@@ -2,6 +2,7 @@
   "name": "Kas Organisasi (KEDAS)",
   "short_name": "KEDAS",
   "description": "Kas organisasi yang rapi, transparan, dan bisa diakses dari mana saja.",
+  "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

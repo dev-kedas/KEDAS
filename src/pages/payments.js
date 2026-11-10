@@ -46,16 +46,58 @@ function table() {
   el.querySelectorAll('tr[data-act]').forEach(tr => { tr.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tr.click(); } }; });
 }
 
-function pickStudent() {
+// ---- pilih anggota: checklist (bisa banyak sekaligus) ----
+const sel = new Set(), pk = { q: '' };
+const pkRows = () => compute().rows.slice().sort((a, b) => b.sisa - a.sisa || a.st.name.localeCompare(b.st.name));
+const pkVisible = () => pkRows().filter(r => r.st.name.toLowerCase().includes(pk.q.trim().toLowerCase()));
+function pkList() {
+  return pkVisible().map(r => `<button type="button" class="pick-item${sel.has(r.st.id) ? ' on' : ''}" role="checkbox" aria-checked="${sel.has(r.st.id)}" data-act="pktoggle" data-id="${r.st.id}"><span class="pk-check">${ic('check')}</span><span class="avatar">${esc(initials(r.st.name))}</span><span class="t">${esc(r.st.name)}</span>${r.sisa ? `<b class="owe">${rp(r.sisa)}</b>` : '<span class="pill lunas">Lunas</span>'}</button>`).join('') || '<div class="empty">Anggota tidak ditemukan.</div>';
+}
+function pkFoot() {
+  const go = $('#pkGo'), n = sel.size; if (!go) return;
+  go.disabled = !n;
+  go.textContent = n === 0 ? 'Pilih anggota dulu' : n === 1 ? 'Lanjut · 1 anggota' : `Lanjut · ${n} anggota`;
+  const all = $('#pkAll'), vis = pkVisible();
+  if (all) all.textContent = vis.length && vis.every(r => sel.has(r.st.id)) ? 'Batalkan semua' : 'Pilih semua';
+}
+function pickStudent(keep = false) {
   if (!S.students.length) return toast('Tambahkan anggota dulu di Pengaturan › Admin');
-  const rows = compute().rows.slice().sort((a, b) => b.sisa - a.sisa || a.st.name.localeCompare(b.st.name));
-  const list = q => rows.filter(r => r.st.name.toLowerCase().includes(q.trim().toLowerCase()))
-    .map(r => `<button type="button" class="pick-item" data-act="pay" data-id="${r.st.id}"><span class="avatar">${esc(initials(r.st.name))}</span><span class="t">${esc(r.st.name)}</span>${r.sisa ? `<b class="owe">${rp(r.sisa)}</b>` : '<span class="pill lunas">Lunas</span>'}</button>`).join('') || '<div class="empty">anggota tidak ditemukan.</div>';
-  openDlg('Pilih anggota', `<input class="input pick-search" id="pk" type="search" placeholder="Cari nama anggota…" aria-label="Cari anggota" autocomplete="off"><div id="pkList" class="pick-list">${list('')}</div>`);
-  $('#pk').oninput = e => { $('#pkList').innerHTML = list(e.target.value); };
+  if (!keep) { sel.clear(); pk.q = ''; }
+  else for (const id of [...sel]) if (!S.students.some(s => s.id === id)) sel.delete(id);
+  const nTunggak = compute().rows.filter(r => r.sisa > 0).length;
+  openDlg('Pilih anggota', `<input class="input pick-search" id="pk" type="search" placeholder="Cari nama anggota…" aria-label="Cari anggota" autocomplete="off" value="${esc(pk.q)}">
+    <div class="pick-tools"><button type="button" class="pk-tool" id="pkAll" data-act="pkall">Pilih semua</button>${nTunggak ? `<button type="button" class="pk-tool" data-act="pkowing">Semua yang menunggak (${nTunggak})</button>` : ''}</div>
+    <p class="hint pick-hint">Centang beberapa anggota kalau mereka bayar bareng dengan nominal yang sama.</p>
+    <div id="pkList" class="pick-list" role="group" aria-label="Daftar anggota">${pkList()}</div>
+    <div class="dlg-foot pick-foot"><button type="button" class="btn" data-close>Batal</button><button type="button" class="btn primary" id="pkGo" data-act="pkgo" disabled>Pilih anggota dulu</button></div>`);
+  $('#pk').oninput = e => { pk.q = e.target.value; $('#pkList').innerHTML = pkList(); pkFoot(); };
+  pkFoot();
 }
 
-function payForm(sid) {
+function multiPayForm(ids) {
+  const rows = compute().rows.filter(r => ids.includes(r.st.id));
+  if (!rows.length) return;
+  const sisa = rows.map(r => r.sisa), same = sisa.every(x => x === sisa[0]) && sisa[0] > 0;
+  const def = same ? sisa[0] : S.settings.nominal;
+  openDlg(`Catat ${rows.length} pembayaran`, `<form id="multiPayForm" novalidate>
+    <input type="hidden" name="sids" value="${rows.map(r => r.st.id).join(',')}">
+    <div class="mp-who"><small>${rows.length} anggota dipilih</small><div class="mp-chips">${rows.map(r => `<span class="mp-chip"><span class="avatar">${esc(initials(r.st.name))}</span>${esc(r.st.name)}</span>`).join('')}</div></div>
+    <div class="row2"><div class="field"><label for="mp-a">Nominal per anggota</label>${moneyField('mp-a', 'amount', def)}</div>
+    <div class="field"><label for="mp-d">Tanggal bayar</label><input class="input" id="mp-d" name="date" type="date" value="${iso(todayD())}" max="${iso(todayD())}" required></div></div>
+    <div class="field"><label for="mp-n">Catatan (opsional)</label><input class="input" id="mp-n" name="note" maxlength="80" placeholder="Contoh: bayar tunai bareng ke bendahara"></div>
+    <div class="mp-sum"><span id="mpCalc"></span><b id="mpTotal"></b></div>
+    <p class="hint">Tiap anggota dicatat sebagai pembayaran sendiri dengan nominal yang sama, lalu dialokasikan ke periode terlama yang belum lunas.${same ? '' : ' Tunggakan mereka berbeda-beda, jadi nominalnya diisi dari iuran biasa.'}</p><p class="err" id="mp-err"></p>
+    <div class="dlg-foot"><button type="button" class="btn" data-close>Kembali</button><button class="btn primary" type="submit">Simpan ${rows.length} pembayaran</button></div></form>`,
+  () => pickStudent(true));
+  const upd = () => {
+    const a = parseMoney($('#mp-a').value);
+    $('#mpCalc').textContent = `${rows.length} anggota × ${rp(a)}`;
+    $('#mpTotal').textContent = rp(a * rows.length);
+  };
+  $('#mp-a').addEventListener('input', upd); upd();
+}
+
+function payForm(sid, onBack) {
   const r = compute().rows.find(x => x.st.id === sid); if (!r) return;
   openDlg('Catat pembayaran', `<form id="payForm" novalidate>
     <input type="hidden" name="sid" value="${r.st.id}">
@@ -65,7 +107,7 @@ function payForm(sid) {
     <div class="field"><label for="pf-n">Catatan (opsional)</label><input class="input" id="pf-n" name="note" maxlength="80" placeholder="Contoh: bayar tunai ke bendahara"></div>
     <p class="hint">Pembayaran otomatis dialokasikan ke periode terlama yang belum lunas.</p><p class="err" id="pf-err"></p>
     <div class="dlg-foot"><button type="button" class="btn" data-close>Batal</button><button class="btn primary" type="submit">Simpan pembayaran</button></div></form>`,
-  () => detailDlg(sid));
+  onBack || (() => detailDlg(sid)));
 }
 
 function detailDlg(sid) {
@@ -86,6 +128,26 @@ function detailDlg(sid) {
 
 registerActions({
   pay: id => { if (isAdmin()) (id ? payForm(id) : pickStudent()); },
+  pktoggle(id, el) {
+    if (!isAdmin()) return;
+    if (sel.has(id)) sel.delete(id); else sel.add(id);
+    el.classList.toggle('on', sel.has(id)); el.setAttribute('aria-checked', String(sel.has(id)));
+    pkFoot();
+  },
+  pkall() {
+    const vis = pkVisible(), all = vis.length && vis.every(r => sel.has(r.st.id));
+    vis.forEach(r => all ? sel.delete(r.st.id) : sel.add(r.st.id));
+    $('#pkList').innerHTML = pkList(); pkFoot();
+  },
+  pkowing() {
+    compute().rows.filter(r => r.sisa > 0).forEach(r => sel.add(r.st.id));
+    $('#pkList').innerHTML = pkList(); pkFoot();
+  },
+  pkgo() {
+    if (!isAdmin() || !sel.size) return;
+    const ids = [...sel];
+    if (ids.length === 1) payForm(ids[0], () => pickStudent(true)); else multiPayForm(ids);
+  },
   detail: id => detailDlg(id),
   async delpay(id) {
     const p = S.payments.find(x => x.id === id); if (!p || !isAdmin()) return;
@@ -97,6 +159,18 @@ registerActions({
 });
 
 registerForms({
+  async multiPayForm({ v, btn, fail }) {
+    if (!isAdmin()) return;
+    const amount = parseMoney(v.amount), ids = [...new Set(String(v.sids || '').split(',').filter(Boolean))].filter(id => S.students.some(s => s.id === id));
+    if (!ids.length) return fail('mp-err', 'Anggota tidak ditemukan.');
+    if (!(amount > 0)) return fail('mp-err', 'Nominal harus lebih dari 0.');
+    if (!v.date || v.date > iso(todayD())) return fail('mp-err', 'Tanggal tidak valid.');
+    btn.disabled = true; fail('mp-err', '');
+    try {
+      await db.addPayments(ids.map(studentId => ({ studentId, amount, date: v.date, note: (v.note || '').trim() })));
+      sel.clear(); rerender(); closeDlg(); toast(`${ids.length} pembayaran dicatat`);
+    } catch (e) { btn.disabled = false; fail('mp-err', db.errMsg(e)); }
+  },
   async payForm({ v, btn, fail }) {
     const amount = parseMoney(v.amount);
     if (!v.sid || !S.students.some(s => s.id === v.sid)) return fail('pf-err', 'anggota tidak ditemukan.');

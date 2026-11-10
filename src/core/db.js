@@ -16,6 +16,8 @@ export function errMsg(e) {
   if (/classes_owner_unique/i.test(m)) return 'Akun ini sudah punya organisasi. Silakan masuk sebagai admin.';
   if (/rate limit|too many|429/i.test(m + c)) return 'Terlalu banyak percobaan. Coba lagi beberapa menit lagi.';
   if (/row-level security|permission denied|42501/i.test(m + c)) return 'Kamu tidak punya izin untuk aksi ini.';
+  if (/bucket not found/i.test(m)) return 'Fitur foto pratinjau belum aktif di server. Jalankan schema_update3.sql di Supabase dulu.';
+  if (/payload too large|exceeded the maximum/i.test(m)) return 'Foto terlalu besar. Pilih foto lain.';
   if (/captcha/i.test(m)) return 'Verifikasi CAPTCHA gagal. Muat ulang halaman lalu coba lagi.';
   return m || 'Terjadi kesalahan. Coba lagi.';
 }
@@ -153,6 +155,21 @@ export async function createClass({ email, password, settings }) {
 export async function addPayment({ studentId, amount, date, note }) {
   const r = must(await sb.from('payments').insert({ class_id: cid(), student_id: studentId, amount, paid_on: date, note }).select(PAY_COLS).single());
   put(S.payments, toPay(r));
+}
+// Banyak anggota bayar bersamaan: satu INSERT = semua tersimpan atau tidak sama sekali.
+export async function addPayments(list) {
+  if (!list.length) return;
+  const rows = list.map(p => ({ class_id: cid(), student_id: p.studentId, amount: p.amount, paid_on: p.date, note: p.note }));
+  const data = must(await sb.from('payments').insert(rows).select(PAY_COLS));
+  data.forEach(r => put(S.payments, toPay(r)));
+}
+// Gambar pratinjau link bagikan: bucket publik 'share-photos' (folder = id organisasi), supaya crawler
+// WhatsApp/Telegram bisa mengambilnya tanpa login. Nama file = hash isi gambar, jadi data yang sama
+// tidak menumpuk file baru (duplikat dianggap berhasil).
+export async function uploadSharePhoto(blob, name) {
+  const { error } = await sb.storage.from('share-photos').upload(`${cid()}/${name}.jpg`, blob, { contentType: 'image/jpeg', cacheControl: '31536000', upsert: false });
+  if (error && !/already exists|duplicate|409/i.test(String(error.message || '') + String(error.statusCode || ''))) throw error;
+  return name;
 }
 export async function deletePayment(id) {
   affected(await sb.from('payments').delete().eq('id', id).select('id'));

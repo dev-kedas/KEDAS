@@ -1,11 +1,12 @@
-// Admin: bagikan link tiap bagian kas + kirim notifikasi. Semua: kartu notifikasi HP (aktif/matikan).
+// Admin: bagikan dashboard lewat satu link (pratinjau = gambar ringkasan) + kirim notifikasi. Semua: kartu notifikasi HP (aktif/matikan).
 import '../styles/pages/broadcast.css';
-import { $, ic, esc, rp } from '../core/utils.js';
+import { $, ic, esc, rp, iso, todayD } from '../core/utils.js';
 import { S } from '../core/store.js';
 import { compute } from '../core/calc.js';
 import { isAdmin } from '../core/session.js';
 import { openDlg, closeDlg, toast, registerActions, registerForms } from '../core/ui.js';
-import { SECTIONS, shareUrl } from '../core/share.js';
+import { shareUrl } from '../core/share.js';
+import { renderShareCard } from '../core/sharecard.js';
 import { render as rerender } from '../core/router.js';
 import * as db from '../core/db.js';
 import * as push from '../core/push.js';
@@ -20,20 +21,49 @@ async function copyText(t) {
   } catch { return false; }
 }
 
-function shareDlg() {
-  openDlg('Bagikan link kas', `<p class="hint share-hint">Penerima harus masuk sebagai siswa organisasi ini dulu, lalu langsung dibawa ke dashboard. Pratinjau link tidak menampilkan angka kas.</p>
-    <div class="share-list">${SECTIONS.map(s => `<div class="share-row"><span class="ico ${s.tone}">${ic(s.icon)}</span><div class="share-t"><b>${s.title}</b><small>${s.desc}</small></div>
-      <div class="share-btns"><button class="btn sm" data-act="copysec" data-id="${s.id}" aria-label="Salin link ${s.title}" title="Salin link">${ic('copy')}</button><button class="btn sm primary" data-act="sharesec" data-id="${s.id}" aria-label="Bagikan ${s.title}" title="Bagikan">${ic('share')}</button></div></div>`).join('')}</div>`);
+// Satu-satunya opsi bagikan: dashboard. Pratinjau link = gambar ringkasan (saldo, pemasukan, pengeluaran),
+// dibuat dari data saat ini lalu diunggah SEBELUM tombol Bagikan aktif, supaya menu bagikan HP
+// terbuka seketika saat ditekan (browser menolak share kalau terlalu lama setelah ketukan).
+let card = null;
+async function tokenFor(key) {
+  try {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(key));
+    return Array.from(new Uint8Array(buf).slice(0, 8), b => b.toString(16).padStart(2, '0')).join('');
+  } catch { return Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toString(16).padStart(2, '0')).join(''); }
 }
-
-async function shareSec(id) {
-  const sec = SECTIONS.find(s => s.id === id); if (!sec || !S.settings.classCode) return;
-  const url = shareUrl(id, S.settings.classCode), name = S.settings.className || 'organisasi';
-  const data = { title: `${sec.title} · ${name}`, text: `${sec.title} ${name}. Masuk sebagai siswa untuk membuka:`, url };
+async function prepareCard() {
+  const c = compute(), s = S.settings, d = { className: s.className || 'Organisasi', balance: c.balance, income: c.income, expense: c.expense, date: todayD() };
+  const key = ['v1', s.classCode, d.className, d.balance, d.income, d.expense, iso(d.date)].join('|');
+  if (!card || card.key !== key) {
+    const blob = await renderShareCard(d);
+    if (card && card.url) URL.revokeObjectURL(card.url);
+    card = { key, blob, url: URL.createObjectURL(blob), token: '' };
+  }
+  if (!card.token) { const t = await tokenFor(key); await db.uploadSharePhoto(card.blob, t); card.token = t; }
+  return card;
+}
+function shareDlg() {
+  openDlg('Bagikan dashboard', `<p class="hint share-hint">Penerima harus masuk sebagai siswa organisasi ini dulu, lalu langsung dibawa ke dashboard. Pratinjau link menampilkan saldo, pemasukan, dan pengeluaran saja (tanpa riwayat dan nama anggota), dan bisa dilihat siapa pun yang menerima link.</p>
+    <div class="share-card" id="shareCard"><div class="share-load">Menyiapkan pratinjau…</div></div>
+    <p class="err" id="sh-err"></p>
+    <div class="dlg-foot"><button type="button" class="btn" data-close>Tutup</button><button type="button" class="btn primary" id="shBtn" data-act="sharedash" disabled>${ic('share')}Bagikan</button></div>`);
+  prepareCard().then(cd => {
+    const el = $('#shareCard'); if (!el) return;
+    el.innerHTML = `<img src="${cd.url}" alt="Pratinjau link: saldo, pemasukan, dan pengeluaran">`;
+    const b = $('#shBtn'); if (b) b.disabled = false;
+  }).catch(e => {
+    const el = $('#shareCard'); if (el) el.innerHTML = '<div class="share-load">Pratinjau gagal dibuat.</div>';
+    const er = $('#sh-err'); if (er) er.textContent = db.errMsg(e);
+  });
+}
+async function shareDash() {
+  if (!card || !card.token || !S.settings.classCode) return;
+  const url = shareUrl('dashboard', S.settings.classCode, card.token), name = S.settings.className || 'organisasi';
+  const data = { title: `Dashboard kas · ${name}`, text: `Dashboard kas ${name}. Masuk sebagai siswa untuk membuka:`, url };
   if (navigator.share) {
     try { await navigator.share(data); return; } catch (e) { if (e && e.name === 'AbortError') return; }
   }
-  toast(await copyText(url) ? 'Link disalin' : 'Gagal menyalin link');
+  toast(await copyText(url) ? 'Link disalin (perangkat ini tak punya menu bagikan)' : 'Gagal menyalin link');
 }
 
 /* ---------- Kirim notifikasi ---------- */
@@ -86,8 +116,7 @@ export function pushCard() {
 
 registerActions({
   sharedlg() { if (isAdmin()) shareDlg(); },
-  copysec: async id => { if (!isAdmin()) return; const u = shareUrl(id, S.settings.classCode); toast(await copyText(u) ? 'Link disalin' : 'Gagal menyalin link'); },
-  sharesec: id => { if (isAdmin()) shareSec(id); },
+  sharedash() { if (isAdmin()) shareDash(); },
   notifdlg() { if (isAdmin()) notifDlg(); },
   ntpl(id) {
     const t = template(id); if (!t) return;

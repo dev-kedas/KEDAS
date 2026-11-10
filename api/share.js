@@ -8,6 +8,7 @@ export default async function handler(req, res) {
     origin: `${proto}://${host}`,
     type: String(req.query.type || ''),
     code: String(req.query.code || ''),
+    photo: String(req.query.photo || ''),
     supabaseUrl: process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
     key: process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY,
   });

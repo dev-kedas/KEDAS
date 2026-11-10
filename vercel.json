@@ -1,5 +1,12 @@
 {
   "rewrites": [
-    { "source": "/s/:type/:code", "destination": "/api/share?type=:type&code=:code" }
+    {
+      "source": "/s/:type/:code/:photo",
+      "destination": "/api/share?type=:type&code=:code&photo=:photo"
+    },
+    {
+      "source": "/s/:type/:code",
+      "destination": "/api/share?type=:type&code=:code"
+    }
   ]
 }

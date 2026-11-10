@@ -34,3 +34,10 @@ self.addEventListener('notificationclick', e => {
     await self.clients.openWindow(url);
   })());
 });
+
+// Syarat "bisa dipasang" di sebagian browser. Hanya menangani buka halaman; sisanya langsung ke jaringan.
+const OFFLINE = '<!doctype html><html lang="id"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tidak ada koneksi</title><body style="font:16px system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;background:#eef3f0;color:#10231c;text-align:center;padding:24px"><div><h2>Tidak ada koneksi</h2><p>KEDAS butuh internet untuk memuat data kas. Coba lagi kalau sudah online.</p><button onclick="location.reload()" style="font:inherit;font-weight:700;padding:10px 18px;border:0;border-radius:12px;background:#0e4d3a;color:#fff">Muat ulang</button></div></body></html>';
+self.addEventListener('fetch', e => {
+  if (e.request.mode !== 'navigate') return;
+  e.respondWith(fetch(e.request).catch(() => new Response(OFFLINE, { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } })));
+});

@@ -78,6 +78,12 @@
   .tab-dot{position:absolute;top:2px;right:10px;width:9px;height:9px;border-radius:50%;background:var(--bad);border:2px solid var(--surface)}
   .fab{justify-self:center;width:56px;height:56px;margin-top:-30px;margin-bottom:6px;border-radius:50%;border:4px solid var(--bg);background:var(--brand);color:#fff;display:grid;place-items:center;box-shadow:0 10px 22px -8px rgba(14,77,58,.7);transition:transform .15s}
   .fab:active{transform:scale(.92)}
+  /* anggota (non-admin): tidak ada tombol tambah, jadi 4 tab dibagi rata & lebih lega */
+  .bottomnav.no-fab{grid-template-columns:repeat(4,minmax(0,1fr));align-items:stretch;padding:8px 8px calc(8px + env(safe-area-inset-bottom))}
+  .bottomnav.no-fab .tab{min-height:56px;gap:4px;font-size:11px}
+  .bottomnav.no-fab .tab .ti{width:64px;height:32px;border-radius:16px}
+  .bottomnav.no-fab .ind{border-radius:16px}
+  .bottomnav.no-fab .tab-dot{right:14px}
   .fab svg{width:26px;height:26px}
 }
 

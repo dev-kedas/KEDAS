@@ -83,7 +83,8 @@ export function renderShell(c, pages, current) {
 
   const tab = p => `<a class="tab" href="#${p.id}"><span class="ti">${ic(p.icon)}${p.id === 'payments' && nTunggak ? '<i class="tab-dot"></i>' : ''}</span>${p.tab}</a>`;
   const [a, b, d, e] = list;
-  setHtml('#bottomnav', `<span class="ind" aria-hidden="true"></span>${tab(a)}${tab(b)}${isAdmin() ? `<button class="fab" data-act="quick" aria-label="Tambah transaksi">${ic('plus')}</button>` : '<span></span>'}${tab(d)}${tab(e)}`);
+  setHtml('#bottomnav', `<span class="ind" aria-hidden="true"></span>${tab(a)}${tab(b)}${isAdmin() ? `<button class="fab" data-act="quick" aria-label="Tambah transaksi">${ic('plus')}</button>` : ''}${tab(d)}${tab(e)}`);
+  $('#bottomnav').classList.toggle('no-fab', !isAdmin());
   markActive(current);
 
   syncIndicators();

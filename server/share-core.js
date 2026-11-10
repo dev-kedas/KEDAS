@@ -3,7 +3,8 @@
 // sudah ada di HTML. Pengguna biasa langsung diarahkan ke aplikasi (/?share=...&code=...),
 // lalu aplikasi meminta mereka masuk sebagai siswa organisasi tersebut.
 //
-// Pratinjau SENGAJA tidak memuat angka kas: isi kas hanya terlihat setelah login.
+// Gambar pratinjau (og:image) dibuat aplikasi admin: ringkasan saldo, pemasukan, pengeluaran — tanpa riwayat
+// dan nama anggota. Isi lengkap dashboard tetap hanya terlihat setelah login.
 
 export const SECTIONS = {
   dashboard:   { title: 'Dashboard kas',  desc: 'Ringkasan saldo, pemasukan, dan pengeluaran kas.' },
@@ -15,8 +16,8 @@ export const SECTIONS = {
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-async function className(supabaseUrl, key, code) {
-  if (!supabaseUrl || !key) return '';
+async function classInfo(supabaseUrl, key, code) {
+  if (!supabaseUrl || !key) return {};
   const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 2500);
   try {
     const r = await fetch(`${supabaseUrl}/rest/v1/rpc/preview_class`, {
@@ -24,21 +25,26 @@ async function className(supabaseUrl, key, code) {
       headers: { apikey: key, 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_code: code }),
     });
-    if (!r.ok) return '';
+    if (!r.ok) return {};
     const d = await r.json();
-    return (d && d.name) || '';
-  } catch { return ''; } finally { clearTimeout(t); }
+    return d ? { name: d.name || '', id: d.id || '' } : {};
+  } catch { return {}; } finally { clearTimeout(t); }
 }
 
-export async function buildShare({ origin, type, code, supabaseUrl, key }) {
+export async function buildShare({ origin, type, code, photo, supabaseUrl, key }) {
   const sec = SECTIONS[type] ? type : 'dashboard';
   const clean = /^[A-Za-z0-9-]{4,20}$/.test(code || '') ? code.toUpperCase() : '';
-  const org = clean ? await className(supabaseUrl, key, clean) : '';
+  const cls = clean ? await classInfo(supabaseUrl, key, clean) : {}, org = cls.name || '';
   const info = SECTIONS[sec];
   const title = org ? `${info.title} · ${org}` : `${info.title} · KEDAS`;
   const desc = `${info.desc} Masuk sebagai siswa organisasi ini untuk membuka.`;
-  const image = `${origin}/og/${sec}.png`;
-  const self = `${origin}/s/${sec}/${clean}`;
+  // Foto pilihan admin (bucket publik share-photos/<id organisasi>/<token>.jpg); tanpa foto -> gambar bawaan.
+  const tok = /^[A-Za-z0-9_-]{6,32}$/.test(photo || '') ? photo : '';
+  const custom = tok && cls.id && /^[0-9a-f-]{36}$/i.test(cls.id) && supabaseUrl
+    ? `${String(supabaseUrl).replace(/\/+$/, '')}/storage/v1/object/public/share-photos/${cls.id}/${tok}.jpg` : '';
+  const image = custom || `${origin}/og/${sec}.png`;
+  const imgType = custom ? 'image/jpeg' : 'image/png';
+  const self = `${origin}/s/${sec}/${clean}${custom ? '/' + tok : ''}`;
   const dest = `${origin}/?share=${sec}${clean ? '&code=' + encodeURIComponent(clean) : ''}`;
   const html = `<!doctype html>
 <html lang="id"><head>
@@ -55,10 +61,10 @@ export async function buildShare({ origin, type, code, supabaseUrl, key }) {
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:url" content="${esc(self)}">
 <meta property="og:image" content="${esc(image)}">
-<meta property="og:image:type" content="image/png">
+<meta property="og:image:type" content="${imgType}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="${esc(info.title)}">
+<meta property="og:image:alt" content="${esc(custom ? title : info.title)}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(title)}">
 <meta name="twitter:description" content="${esc(desc)}">

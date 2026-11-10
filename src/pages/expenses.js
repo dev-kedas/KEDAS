@@ -21,9 +21,43 @@ function shrink(file, max = 1024, q = 0.7) {
     img.src = url;
   });
 }
-const proofHtml = () => photo
-  ? `<div class="proof-prev"><img src="${photo}" alt="Pratinjau foto bukti"><div class="proof-btns"><button type="button" class="btn sm" data-act="pickphoto">${ic('camera')}Ganti</button><button type="button" class="btn sm ghost owe" data-act="rmphoto">${ic('trash')}Hapus</button></div></div>`
-  : `<button type="button" class="proof-add" data-act="pickphoto">${ic('camera')}<span><b>Tambah foto bukti</b><small>Foto nota/struk, otomatis dikecilkan</small></span></button>`;
+// Kamera selalu ditawarkan. HP/tablet: kamera bawaan lewat <input capture>. Komputer: webcam lewat
+// getUserMedia, pratinjaunya tampil langsung di dalam form (isi form lain tidak hilang).
+const touch = () => matchMedia('(pointer: coarse)').matches;
+let stream = null;
+function stopCam() { if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; }
+$('#dlg').addEventListener('close', stopCam);
+
+const proofHtml = () => {
+  const t = touch();
+  const cam = `<button type="button" class="proof-opt" data-act="pickcamera">${ic('camera')}<span><b>Kamera</b><small>Foto langsung</small></span></button>`;
+  const gal = `<button type="button" class="proof-opt" data-act="pickgallery">${ic('image')}<span><b>${t ? 'Galeri' : 'Pilih file'}</b><small>${t ? 'Pilih dari HP' : 'Dari perangkat ini'}</small></span></button>`;
+  return photo
+    ? `<div class="proof-prev"><img src="${photo}" alt="Pratinjau foto bukti"><div class="proof-btns"><div class="proof-row"><button type="button" class="btn sm" data-act="pickcamera">${ic('camera')}Kamera</button><button type="button" class="btn sm" data-act="pickgallery">${ic('image')}${t ? 'Galeri' : 'Pilih file'}</button></div><button type="button" class="btn sm ghost owe" data-act="rmphoto">${ic('trash')}Hapus</button></div></div>`
+    : `<div class="proof-opts">${cam}${gal}</div><small class="hint proof-hint">Foto nota/struk, otomatis dikecilkan.</small>`;
+};
+async function openWebcam() {
+  const box = $('#proofBox'); if (!box) return;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return toast('Browser ini belum bisa membuka kamera. Pakai tombol Pilih file.');
+  stopCam();
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 960 } }, audio: false });
+  } catch (e) {
+    return toast(e && e.name === 'NotAllowedError' ? 'Izin kamera ditolak. Izinkan kamera di pengaturan situs browser.'
+      : e && e.name === 'NotFoundError' ? 'Kamera tidak ditemukan di perangkat ini.' : 'Kamera tidak bisa dibuka (dipakai aplikasi lain?).');
+  }
+  if (!$('#proofBox')) return stopCam();   // dialog sudah ditutup selagi menunggu izin
+  $('#proofBox').innerHTML = `<div class="cam"><video id="camV" autoplay playsinline muted></video><div class="cam-bar"><button type="button" class="btn" data-act="camstop">Batal</button><button type="button" class="btn primary" data-act="camshot">${ic('camera')}Ambil foto</button></div></div>`;
+  $('#camV').srcObject = stream;
+}
+function snap() {
+  const v = $('#camV'); if (!v || !v.videoWidth) return toast('Kamera belum siap, tunggu sebentar.');
+  const k = Math.min(1, 1024 / Math.max(v.videoWidth, v.videoHeight)), c = document.createElement('canvas');
+  c.width = Math.round(v.videoWidth * k); c.height = Math.round(v.videoHeight * k);
+  c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+  photo = c.toDataURL('image/jpeg', 0.7); photoOp = { data: photo };
+  stopCam(); $('#proofBox').innerHTML = proofHtml();
+}
 
 function render() {
   const p = takePreset(); if (p) Object.assign(F, p);
@@ -58,26 +92,30 @@ function table() {
 
 function expForm(id) {
   const e = id ? S.expenses.find(x => x.id === id) : null;
-  photo = ''; photoOp = null; const ft = ++formToken;
+  stopCam(); photo = ''; photoOp = null; const ft = ++formToken;
   openDlg(e ? 'Edit pengeluaran' : 'Tambah pengeluaran', `<form id="expForm" data-id="${e ? e.id : ''}" novalidate>
     <div class="field"><label for="x-n">Nama pengeluaran</label><input class="input" id="x-n" name="name" maxlength="80" value="${e ? esc(e.name) : ''}" required></div>
     <div class="row2"><div class="field"><label for="x-a">Nominal</label>${moneyField('x-a', 'amount', e ? e.amount : '')}</div>
     <div class="field"><label for="x-d">Tanggal</label><input class="input" id="x-d" name="date" type="date" value="${e ? e.date : iso(todayD())}" required></div></div>
     <div class="field"><label for="x-c">Kategori</label><select class="input" id="x-c" name="category">${CATS.map(k => `<option ${e && e.category === k ? 'selected' : ''}>${k}</option>`).join('')}</select></div>
     <div class="field"><label for="x-k">Keterangan</label><textarea class="input" id="x-k" name="note" rows="2" maxlength="200">${e ? esc(e.note) : ''}</textarea></div>
-    <div class="field"><label>Foto bukti (opsional)</label><div id="proofBox">${proofHtml()}</div><input type="file" id="x-f" accept="image/*" hidden></div>
+    <div class="field"><label>Foto bukti (opsional)</label><div id="proofBox">${proofHtml()}</div><input type="file" id="x-f" accept="image/*" hidden><input type="file" id="x-c" accept="image/*" capture="environment" hidden></div>
     <p class="err" id="x-err"></p>
     <div class="dlg-foot"><button type="button" class="btn" data-close>Batal</button><button class="btn primary" type="submit">Simpan</button></div></form>`);
-  $('#x-f').onchange = async ev => {
+  const onPick = async ev => {
     const f = ev.target.files[0]; ev.target.value = ''; if (!f) return;
     try { photo = await shrink(f); photoOp = { data: photo }; $('#proofBox').innerHTML = proofHtml(); } catch { toast('File itu bukan gambar yang valid'); }
   };
+  $('#x-f').onchange = onPick; $('#x-c').onchange = onPick;
   if (e && e.hasPhoto) db.getPhoto(e.id).then(p => { if (ft === formToken && !photoOp && p) { photo = p; const b = $('#proofBox'); if (b) b.innerHTML = proofHtml(); } }).catch(() => { });
 }
 
 registerActions({
-  pickphoto: () => $('#x-f') && $('#x-f').click(),
-  rmphoto() { photo = ''; photoOp = { remove: true }; $('#proofBox').innerHTML = proofHtml(); },
+  pickgallery: () => $('#x-f') && $('#x-f').click(),
+  pickcamera() { if (touch()) { const c = $('#x-c'); if (c) c.click(); } else openWebcam(); },
+  camshot: () => snap(),
+  camstop() { stopCam(); const b = $('#proofBox'); if (b) b.innerHTML = proofHtml(); },
+  rmphoto() { stopCam(); photo = ''; photoOp = { remove: true }; $('#proofBox').innerHTML = proofHtml(); },
   async zoomproof(id) {
     const x = S.expenses.find(v => v.id === id); if (!x || !x.hasPhoto) return;
     let src = ''; try { src = await db.getPhoto(id); } catch (er) { return toast(db.errMsg(er)); }

@@ -33,6 +33,23 @@ dialog.closing{animation:dlg-pop-out .22s cubic-bezier(.4,0,.6,1) forwards}
 .pick-item{display:flex;align-items:center;gap:12px;width:100%;padding:10px 8px;border:0;border-radius:var(--r-md);background:none;text-align:left;transition:background .15s}
 .pick-item:hover{background:var(--bg)}
 .pick-item .t{flex:1;min-width:0;font-weight:600}
+.pick-tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.pk-tool{border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:20px;padding:6px 12px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;transition:background .15s,border-color .15s}
+.pk-tool:hover{background:var(--hover);border-color:var(--brand-2)}
+.pick-hint{margin:2px 2px 8px}
+.pick-list{max-height:min(46vh,420px);overflow:auto;margin:0 -6px;padding:0 6px}
+.pick-item.on{background:var(--brand-soft)}
+.pk-check{flex:none;width:22px;height:22px;border-radius:7px;border:2px solid var(--line-strong);display:grid;place-items:center;color:transparent;background:var(--input-bg);transition:background .15s,border-color .15s,color .15s}
+.pk-check svg{width:14px;height:14px;stroke-width:3.2}
+.pick-item.on .pk-check{background:var(--brand);border-color:var(--brand);color:#fff}
+.pick-foot{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.mp-who{padding:12px;margin-bottom:16px;border-radius:var(--r-md);background:var(--bg)}
+.mp-who small{display:block;color:var(--muted);font-weight:600;margin-bottom:8px}
+.mp-chips{display:flex;flex-wrap:wrap;gap:6px;max-height:132px;overflow:auto}
+.mp-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 3px;border-radius:20px;background:var(--surface);border:1px solid var(--line);font-size:13px;font-weight:600}
+.mp-chip .avatar{width:24px;height:24px;font-size:10.5px}
+.mp-sum{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 14px;margin:2px 0 10px;border-radius:var(--r-md);background:var(--ok-soft);color:var(--ok);font-weight:600}
+.mp-sum b{font-size:16px;font-weight:800}
 
 @media (max-width:820px){
   dialog#dlg{width:100%;max-width:none;max-height:92vh;margin:auto 0 0;border-radius:24px 24px 0 0}

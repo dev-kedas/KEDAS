@@ -12,7 +12,7 @@ const IDS = SECTIONS.map(s => s.id);
 const KEY = 'kedas.share';
 
 export const norm = s => String(s || '').toUpperCase().replace(/[\s-]/g, '');
-export const shareUrl = (type, code) => `${location.origin}/s/${type}/${encodeURIComponent(code)}`;
+export const shareUrl = (type, code, photo = '') => `${location.origin}/s/${type}/${encodeURIComponent(code)}${photo ? '/' + photo : ''}`;
 
 let cur = null;
 // Dipanggil sekali saat aplikasi dibuka. Mengambil tujuan dari URL lalu membersihkan URL-nya.
