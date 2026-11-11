@@ -12,7 +12,7 @@ import { applyTheme } from './core/theme.js';
 import { initUI, registerActions, runAction, toast } from './core/ui.js';
 import { initDatePickers } from './core/datepicker.js';
 import { registerPages, render, route, start, navigate } from './core/router.js';
-import { initShell, quickSheet, closeNotif, visibleNotifs} from './components/shell.js';
+import { initShell, quickSheet, closeNotif, visibleNotifs, setNotifTab } from './components/shell.js';
 import { initAuth, showAuth, showSetup, showShareLogin, logout } from './pages/auth.js';
 import { captureShare, getShare, clearShare, norm, flashSection } from './core/share.js';
 import { registerSW, syncPush } from './core/push.js';
@@ -31,8 +31,10 @@ registerPages([dashboard, payments, expenses, settings]);
 registerActions({
   quick() { if (!isAdmin()) return; closeNotif(); quickSheet(); },
   readall() {
-    markRead(visibleNotifs(compute()).map(n => n.id)); render(); $('#notifPanel').hidden = false;
+    const t = document.querySelector('.np-tab.on');
+    markRead(visibleNotifs(compute(), t ? t.dataset.id : undefined).map(n => n.id)); render(); $('#notifPanel').hidden = false;
   },
+  ntab(id) { setNotifTab(id); render(); $('#notifPanel').hidden = false; },
   notif(id, el) {
     markRead([id]);
     closeNotif(); render(); if (el.dataset.sid) runAction('detail', el.dataset.sid);
@@ -43,15 +45,17 @@ registerActions({
 function enterApp() {
   document.body.classList.remove('is-auth', 'booting');
   applyTheme();
-  history.replaceState(null, '', location.pathname + location.search);
+  const qs = new URLSearchParams(location.search), toKedas = qs.get('notif') === 'kedas';
+  qs.delete('notif');
+  history.replaceState(null, '', location.pathname + (qs.toString() ? '?' + qs : ''));
   start();
+  if (toKedas) { setNotifTab('kedas'); render(); $('#notifPanel').hidden = false; $('#bellBtn').setAttribute('aria-expanded', 'true'); }
   startRealtime(onRemote);
   syncPush();
   consumeShare();
   if (recovering) { recovering = false; passForm(); }
 }
 
-// Link bagikan: setelah masuk, pastikan link-nya untuk organisasi ini, lalu sorot bagiannya.
 function consumeShare() {
   const sh = getShare(); if (!sh) return;
   clearShare();
@@ -61,7 +65,6 @@ function consumeShare() {
 }
 const showEntry = () => { const sh = getShare(); if (sh && sh.code) showShareLogin(sh.code); else showAuth(); };
 
-// Dipanggil saat data berubah dari perangkat lain (realtime).
 function onRemote(ok) {
   if (!ok || !sessionValid()) { logout(); toast('Sesi berakhir. Silakan masuk lagi.'); return; }
   applyTheme();

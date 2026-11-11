@@ -12,11 +12,11 @@ const F = { q: '', status: 'all' };
 
 function render() {
   const p = takePreset(); if (p) Object.assign(F, p);
-  if (!['all', 'tunggak', 'lunas'].includes(F.status)) F.status = 'all';
+  if (!['all', 'belum', 'tunggak', 'lunas'].includes(F.status)) F.status = 'all';
   $('#view').innerHTML = `
   <div class="toolbar pay-toolbar">
     <input class="input grow" id="fq" type="search" placeholder="Cari nama anggota…" value="${esc(F.q)}" aria-label="Cari anggota">
-    <div class="pay-filter">${seg('pstatus', [['all', 'Semua'], ['tunggak', 'Menunggak'], ['lunas', 'Lunas']], F.status)}</div>
+    <div class="pay-filter">${seg('pstatus', [['all', 'Semua'], ['belum', 'Belum bayar'], ['tunggak', 'Menunggak'], ['lunas', 'Lunas']], F.status)}</div>
   </div>
   <div class="card"><div id="payTable"></div></div>`;
   $('#fq').oninput = e => { F.q = e.target.value; table(); };
@@ -24,17 +24,29 @@ function render() {
   placeIndicators();registerActions({ pstatus(id) { F.status = id; rerender(); } });registerActions({ pstatus(id) { F.status = id; rerender(); } });
 }
 
+function legend(per) {
+  return `<div class="pay-legend" role="note" aria-label="Arti status pembayaran">
+    <b>Arti status</b>
+    <ul>
+      <li><span class="pill lunas">Lunas</span><span>Iuran semua ${per} yang sudah berjalan sudah dibayar penuh.</span></li>
+      <li><span class="pill belum">Belum Bayar</span><span>Masih ada iuran yang belum dibayar, tapi belum lewat jatuh tempo. Jatuh tempo = hari terakhir tiap ${per}.</span></li>
+      <li><span class="pill tunggak">Menunggak</span><span>Ada iuran yang sudah lewat jatuh tempo dan belum dibayar penuh.</span></li>
+    </ul>
+    <small>"Total tunggakan" di dashboard menjumlahkan sisa iuran semua anggota yang Belum Bayar dan Menunggak.</small>
+  </div>`;
+}
+
 function table() {
   const el = $('#payTable'); if (!el) return;
   const c = compute(), q = F.q.trim().toLowerCase();
   const order = { tunggak: 0, belum: 1, lunas: 2 };
-  const rows = c.rows.filter(r => (F.status === 'all' || (F.status === 'owing' ? r.sisa > 0 : r.status === F.status)) && r.st.name.toLowerCase().includes(q))
+  const rows = c.rows.filter(r => (F.status === 'all' || r.status === F.status) && r.st.name.toLowerCase().includes(q))
     .sort((a, b) => order[a.status] - order[b.status] || b.sisa - a.sisa || a.st.name.localeCompare(b.st.name));
   const per = S.settings.mode === 'weekly' ? 'minggu' : 'bulan';
   if (!S.students.length) { el.innerHTML = '<div class="empty">Belum ada anggota. Admin bisa menambahkan di Pengaturan › Admin.</div>'; return; }
   const n = st => c.rows.filter(r => r.status === st).length;
-  el.innerHTML = `<div class="pay-sum"><div><small>Iuran per ${per}</small><b>${rp(S.settings.nominal)}</b></div><div class="bad"><small>Menunggak</small><b>${n('tunggak')} anggota</b></div><div class="ok"><small>Lunas</small><b>${n('lunas')} anggota</b></div></div>` +
-    (rows.length ? `<div class="table-wrap"><table class="resp pay"><thead><tr><th>anggota</th><th>Status</th><th>Wajib</th><th>Dibayar</th><th>Tunggakan</th><th></th></tr></thead><tbody>` +
+  el.innerHTML = `<div class="pay-sum"><div><small>Iuran per ${per}</small><b>${rp(S.settings.nominal)}</b></div><div class="warn"><small>Belum bayar</small><b>${n('belum')} anggota</b></div><div class="bad"><small>Menunggak</small><b>${n('tunggak')} anggota</b></div><div class="ok"><small>Lunas</small><b>${n('lunas')} anggota</b></div></div>` + legend(per) +
+    (rows.length ? `<div class="table-wrap"><table class="resp pay"><thead><tr><th>Anggota</th><th>Status</th><th>Wajib</th><th>Dibayar</th><th>Tunggakan</th><th></th></tr></thead><tbody>` +
       rows.map(r => `<tr class="row-${r.status}" data-act="detail" data-id="${r.st.id}" tabindex="0" role="button" aria-label="Buka riwayat ${esc(r.st.name)}">
         <td class="first"><div class="name-cell"><span class="avatar">${esc(initials(r.st.name))}</span>${esc(r.st.name)}</div></td>
         <td data-label="Status"><span class="pill ${r.status}">${STATUS_LABEL[r.status]}</span></td>
@@ -46,7 +58,6 @@ function table() {
   el.querySelectorAll('tr[data-act]').forEach(tr => { tr.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tr.click(); } }; });
 }
 
-// ---- pilih anggota: checklist (bisa banyak sekaligus) ----
 const sel = new Set(), pk = { q: '' };
 const pkRows = () => compute().rows.slice().sort((a, b) => b.sisa - a.sisa || a.st.name.localeCompare(b.st.name));
 const pkVisible = () => pkRows().filter(r => r.st.name.toLowerCase().includes(pk.q.trim().toLowerCase()));
@@ -173,7 +184,7 @@ registerForms({
   },
   async payForm({ v, btn, fail }) {
     const amount = parseMoney(v.amount);
-    if (!v.sid || !S.students.some(s => s.id === v.sid)) return fail('pf-err', 'anggota tidak ditemukan.');
+    if (!v.sid || !S.students.some(s => s.id === v.sid)) return fail('pf-err', 'Anggota tidak ditemukan.');
     if (!(amount > 0)) return fail('pf-err', 'Nominal harus lebih dari 0.');
     if (!v.date || v.date > iso(todayD())) return fail('pf-err', 'Tanggal tidak valid.');
     btn.disabled = true;

@@ -1,7 +1,5 @@
-// Notifikasi HP (Web Push). Service worker: public/sw.js. Pengirim: supabase/functions/send-push.
 import { sb } from './supabase.js';
 
-// Kunci publik VAPID (aman dibuka; pasangannya yang privat hanya ada di Supabase secrets).
 const VAPID = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BNu62ruM18S1CSVKbA1BGpzbtq-taK_tgQigkgj2wpSQpSc_PYdFz9EpzBEX7wAixxGEFE6lkzfHZCQeFvwt3xE';
 const FLAG = 'kedas.push', LATER = 'kedas.pushlater';
 const ls = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch { } } };
@@ -10,7 +8,6 @@ const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.
 const standalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 const b64 = s => { const p = '='.repeat((4 - s.length % 4) % 4), r = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(r, c => c.charCodeAt(0)); };
 
-// 'ios-install' | 'unsupported' | 'denied' | 'on' | 'off'
 export function pushState() {
   if (isIOS() && !standalone()) return 'ios-install';
   if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return 'unsupported';
@@ -58,11 +55,9 @@ export async function disablePush() {
   ls.set(FLAG, '0');
 }
 
-// Saat masuk: sambungkan lagi perangkat ini ke akun yang sedang login (HP bisa dipakai gantian).
 export async function syncPush() {
   try { if (pushState() === 'on') await save(await currentSub(true)); } catch (e) { console.warn('sync push', e); }
 }
-// Saat keluar: lepaskan perangkat dari akun lama supaya tidak menerima notifikasi orang lain.
 export async function unlinkPush() {
   try {
     if (!('serviceWorker' in navigator)) return;

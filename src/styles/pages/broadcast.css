@@ -1,28 +1,23 @@
-/* admin: tombol di dashboard */
 .admin-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
 .admin-bar .btn{display:inline-flex;align-items:center;gap:8px}
 .admin-bar .btn svg{width:17px;height:17px}
 @media (max-width:820px){.admin-bar .btn{flex:1;justify-content:center}}
 
-/* sorotan bagian yang dibagikan */
 .sec-flash{animation:secflash 3.2s ease-out}
 @keyframes secflash{0%,18%{box-shadow:0 0 0 4px var(--brand-2),0 0 0 14px var(--ring)}100%{box-shadow:0 0 0 0 transparent}}
 @media (prefers-reduced-motion:reduce){.sec-flash{animation:none;outline:3px solid var(--brand-2);outline-offset:3px}}
 
-/* dialog bagikan */
 .share-hint{margin-bottom:12px}
 .share-card img,.share-load{display:block;width:100%;aspect-ratio:1200/630;border-radius:var(--r-md);border:1px solid var(--line)}
 .share-load{display:grid;place-items:center;background:var(--bg);color:var(--muted);font-size:13px;font-weight:600}
 #dlg .dlg-foot .btn.primary svg{width:17px;height:17px;margin-right:8px;vertical-align:-3px}
 
-/* dialog kirim notifikasi */
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .chip{border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:20px;padding:7px 13px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s}
 .chip:hover{background:var(--hover);border-color:var(--brand-2)}
 #notifForm .dlg-foot .btn.primary{display:inline-flex;align-items:center;gap:8px}
 #notifForm .dlg-foot svg{width:17px;height:17px}
 
-/* banner & kartu notifikasi HP */
 .push-banner{display:flex;align-items:center;gap:12px;padding:14px 16px;margin-bottom:16px}
 .push-banner .ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none}
 .push-banner .ico svg{width:19px;height:19px}
@@ -35,13 +30,10 @@
 .push-actions .btn{display:inline-flex;align-items:center;gap:8px}
 .push-actions .btn svg{width:17px;height:17px}
 
-/* dialog langkah pasang aplikasi */
 .install-steps{margin:0 0 6px;padding-left:22px;display:grid;gap:10px;line-height:1.5}
 .install-steps li::marker{font-weight:800;color:var(--brand-ink)}
 
-/* lonceng: pengumuman */
 .np-time{font-size:12px!important;color:var(--muted)!important;margin-top:2px}
 
-/* login lewat link bagikan */
 .share-note{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;margin:0 0 14px;border-radius:12px;background:var(--info-soft);color:var(--ink);font-size:13px;line-height:1.45}
 .share-note svg{width:17px;height:17px;flex:none;margin-top:1px;color:var(--info)}

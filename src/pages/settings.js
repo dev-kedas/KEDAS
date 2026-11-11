@@ -51,7 +51,7 @@ function userSection() {
   return `<div class="grid g-2">
   <div class="grid set-side">
     <div class="card"><h2>Akun</h2>
-      <div class="who"><span class="avatar">${esc(initials(userName() || '?'))}</span><div><b>${esc(userName())}</b><small>${isAdmin() ? 'Admin organisasi' : 'anggota'} · ${esc(S.settings.className)}</small></div></div>
+      <div class="who"><span class="avatar">${esc(initials(userName() || '?'))}</span><div><b>${esc(userName())}</b><small>${isAdmin() ? 'Admin organisasi' : 'Anggota'} · ${esc(S.settings.className)}</small></div></div>
       <button class="btn" data-act="logout">${ic('logout')}Keluar</button></div>
     ${installCard()}
     ${pushCard()}
@@ -91,11 +91,11 @@ function adminSection() {
   <div class="card"><h2>Tema organisasi</h2>
     <div class="field"><label>Mode</label>${seg('cmode', MODES.slice(0, 2), ct.mode)}</div>
     <div class="field"><label>Warna aksen</label>${swatches('cacc', ct.accent, false, ct.customHex || ACCENTS.custom.c)}</div>
-    <div class="switch-row" data-act="cforce"><div><b>Wajibkan semua pakai tema organisasi</b><small>anggota tidak bisa memilih tema sendiri. Kalau mati, tiap anggota bebas memilih tema pribadi atau tema organisasi di bagian Pengguna.</small></div>
+    <div class="switch-row" data-act="cforce"><div><b>Wajibkan semua pakai tema organisasi</b><small>Anggota tidak bisa memilih tema sendiri. Kalau mati, tiap anggota bebas memilih tema pribadi atau tema organisasi di bagian Pengguna.</small></div>
       <button type="button" class="switch ${ct.forced ? 'on' : ''}" role="switch" aria-checked="${ct.forced}" data-k="cforce" aria-label="Wajibkan tema organisasi"><i></i></button></div>
   </div>
 
-  <div class="card"><h2>Data</h2><p class="hint data-hint">Data tersimpan di server dan bisa dibuka dari perangkat mana pun. Ekspor Excel membuat satu file dengan 4 sheet: Pengaturan, anggota, Pembayaran, dan Pengeluaran. Muat Excel akan menggantikan semua data yang ada.</p>
+  <div class="card"><h2>Data</h2><p class="hint data-hint">Data tersimpan di server dan bisa dibuka dari perangkat mana pun. Ekspor Excel membuat satu file dengan 4 sheet: Pengaturan, Anggota, Pembayaran, dan Pengeluaran. Muat Excel akan menggantikan semua data yang ada.</p>
     <div class="data-actions"><button class="btn" data-act="expxlsx">Ekspor Excel</button><button class="btn" data-act="impxlsx">Muat Excel</button><button class="btn" data-act="blank">Mulai dari kosong</button><button class="btn" data-act="demo">Muat data contoh</button></div>
     <input type="file" id="xlsFile" accept=".xlsx" hidden></div>
   </div>
@@ -103,7 +103,7 @@ function adminSection() {
   <div class="grid set-side fill">
     <div class="card"><h2>Akses organisasi</h2>
       <div class="field"><label>Kode organisasi (dibagikan ke anggota)</label><div class="code-row"><b>${esc(s.classCode)}</b><button class="btn sm" data-act="copycode">${ic('copy')}Salin</button><button class="btn sm ghost" data-act="newcode">Ganti</button></div>
-      <div class="qr-row"><div class="qr-thumb"><img id="setQr" alt="QR kode organisasi" width="96" height="96"></div><div class="qr-actions"><small>anggota bisa scan QR ini di halaman masuk.</small><button class="btn sm" data-act="shareqr">${ic('share')}Bagikan QR</button><button class="btn sm" data-act="dlqr">${ic('down')}Unduh QR</button></div></div></div>
+      <div class="qr-row"><div class="qr-thumb"><img id="setQr" alt="QR kode organisasi" width="96" height="96"></div><div class="qr-actions"><small>Anggota bisa scan QR ini di halaman masuk.</small><button class="btn sm" data-act="shareqr">${ic('share')}Bagikan QR</button><button class="btn sm" data-act="dlqr">${ic('down')}Unduh QR</button></div></div></div>
       <div class="field" style="margin-bottom:0"><label>Akun admin</label><div class="code-row"><b class="acc-email">${esc((getSession() && getSession().email) || '')}</b><button class="btn sm" data-act="editpass">${ic('key')}Ubah password</button></div></div></div>
       <div class="card"><div class="card-head"><h2>Daftar anggota (${S.students.length})</h2><div class="actions">${S.students.length ? `<button class="btn sm ghost owe" data-act="delall">${ic('trash')}Hapus semua</button>` : ''}<button class="btn sm primary" data-act="addstu">${ic('plus')}Tambah</button></div></div>
       ${S.students.length ? S.students.map(st => `<div class="plist"><div class="name-cell"><span class="avatar">${esc(initials(st.name))}</span>${esc(st.name)}</div><div class="actions"><button class="btn sm ghost" data-act="editstu" data-id="${st.id}" aria-label="Edit ${esc(st.name)}">${ic('edit')}</button><button class="btn sm ghost owe" data-act="delstu" data-id="${st.id}" aria-label="Hapus ${esc(st.name)}">${ic('trash')}</button></div></div>`).join('') : '<div class="empty">Belum ada anggota.</div>'}</div>

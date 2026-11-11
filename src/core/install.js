@@ -1,5 +1,3 @@
-// Pasang KEDAS sebagai aplikasi di HP (PWA). Chrome/Edge/Samsung Internet menyediakan tombol pasang
-// sekali ketuk lewat 'beforeinstallprompt'; iPhone/iPad dan browser lain perlu langkah manual.
 import { $, ic } from './utils.js';
 import { openDlg, toast, registerActions } from './ui.js';
 
@@ -12,7 +10,6 @@ let deferred = null;
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; refresh(); });
 window.addEventListener('appinstalled', () => { deferred = null; ls.set(KEY, '1'); refresh(); toast('KEDAS terpasang'); });
 
-// 'installed' | 'prompt' | 'ios' | 'manual'
 export function installState() {
   if (standalone()) return 'installed';
   if (deferred) return 'prompt';
@@ -38,7 +35,6 @@ export function installCard() {
   return `<div class="card" id="installBox"><h2>Pasang sebagai aplikasi</h2>${body}</div>`;
 }
 
-// Banner di dashboard: hanya kalau belum terpasang dan belum ditutup. suppressIos: banner notifikasi iOS ikut diganti.
 export function installBanner() {
   const st = installState();
   if (st === 'installed' || st === 'manual' || ls.get(KEY) === '1') return '';

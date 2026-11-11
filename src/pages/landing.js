@@ -17,7 +17,6 @@ const HEART = svg('<path d="M12 21s-7-4.6-9.3-9.1C1.3 8.9 3 5 6.6 5c2 0 3.4 1.1 
 const COFFEE = svg('<path d="M4 8h12v6a5 5 0 01-5 5H9a5 5 0 01-5-5V8zM16 10h2a2 2 0 010 4h-2M8 3v2M12 3v2"/>');
 const STAR = svg('<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9L12 3z"/>');
 const BUG = svg('<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/>');
-const FORK = svg('<circle cx="6" cy="5" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="12" cy="19" r="2"/><path d="M6 7v2a3 3 0 003 3h6a3 3 0 003-3V7M12 12v5"/>');
 
 const SUPPORT = [
   { k: 'saweria', name: 'Saweria', desc: 'Dukung lewat QRIS, e-wallet, atau transfer bank.', icon: HEART, c: '#f5a623' },
@@ -129,11 +128,10 @@ const storyHtml = `<section class="lp-story-track" id="cara"><div class="lp-stor
 
 const SUPPORT_CARDS = SUPPORT.filter(s => LINKS[s.k]).map(s => `<a class="lp-sup lp-rv" style="--sc:${s.c}" href="${esc(LINKS[s.k])}" target="_blank" rel="noopener noreferrer"><span class="lp-sup-ico">${s.icon}</span><div><b>${s.name}</b><small>${s.desc}</small></div>${ic('arrow')}</a>`).join('');
 const REPO_BTNS = LINKS.github ? `<div class="lp-repo lp-rv">
-  <div class="lp-repo-txt"><span class="lp-repo-ico">${GH}</span><div><b>Open source di GitHub</b><small>Kasih bintang, laporkan bug, atau ikut berkontribusi. Semua bantuan sangat berarti.</small></div></div>
+  <div class="lp-repo-txt"><span class="lp-repo-ico">${GH}</span><div><b>Open source di GitHub</b><small>Kasih bintang atau laporkan bug kalau ada yang kurang pas. Semua masukan sangat berarti.</small></div></div>
   <div class="lp-repo-btns">
     <a class="btn" href="${esc(LINKS.github)}" target="_blank" rel="noopener noreferrer">${STAR}Beri bintang</a>
     <a class="btn" href="${esc(LINKS.github)}/issues/new" target="_blank" rel="noopener noreferrer">${BUG}Lapor bug</a>
-    <a class="btn" href="${esc(LINKS.github)}/fork" target="_blank" rel="noopener noreferrer">${FORK}Fork</a>
   </div></div>` : '';
 
 const swatches = () => {
@@ -305,7 +303,8 @@ function ringTo(on) {
   })(t0);
 }
 const sm = { sy: 0, scrub: 0, story: 0 };
-const isMobile = () => matchMedia('(max-width: 900px)').matches;
+const STACK_Q = '(min-width:621px) and (max-width:900px), (min-width:621px) and (max-height:600px)';
+const stacked = () => matchMedia(STACK_Q).matches;
 function paintStory(all) {
   const st = rootEl && rootEl.querySelector('.lp-story-track'); if (!st) return;
   st.querySelectorAll('.lp-st').forEach((el, i) => el.classList.toggle('on', all || i === shown));
@@ -334,7 +333,9 @@ function frame() {
   }
 
   const st = rootEl.querySelector('.lp-story-track');
-  if (st) {
+  if (st && stacked()) {
+    if (shown !== -2) { shown = -2; paintStory(true); }
+  } else if (st) {
     const r = st.getBoundingClientRect(), range = st.offsetHeight - (vh - NAV_H);
     const tgt = range > 0 ? clamp((NAV_H - r.top) / range) : 0;
     sm.story += (tgt - sm.story) * 0.12;

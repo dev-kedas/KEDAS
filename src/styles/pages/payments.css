@@ -1,9 +1,11 @@
 .pay-status{width:auto}
 
-.pay-sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.pay-sum{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
 .pay-sum div{padding:10px 14px;border-radius:var(--r-md);background:var(--gold-soft)}
 .pay-sum small{display:block;color:var(--muted);font-size:12px;font-weight:600}
 .pay-sum b{font-size:16px;font-weight:800}
+.pay-sum .warn{background:var(--warn-soft)}
+.pay-sum .warn b{color:var(--warn)}
 .pay-sum .bad{background:var(--bad-soft)}
 .pay-sum .bad b{color:var(--bad)}
 .pay-sum .ok{background:var(--ok-soft)}
@@ -29,3 +31,12 @@ table.pay tr:hover td.go svg{transform:translateX(3px);color:var(--brand)}
   .pay-sum b{font-size:14px}
   table.pay td.go{display:none}
 }
+
+.pay-legend{margin:0 0 14px;padding:12px 14px;border-radius:var(--r-md);background:var(--bg);border:1px solid var(--line)}
+.pay-legend>b{display:block;font-size:13px;margin-bottom:8px}
+.pay-legend ul{list-style:none;padding:0;display:grid;gap:8px}
+.pay-legend li{display:grid;grid-template-columns:104px minmax(0,1fr);gap:10px;align-items:start;font-size:13px;line-height:1.45;color:var(--ink-2)}
+.pay-legend li .pill{justify-self:start;white-space:nowrap}
+.pay-legend>small{display:block;margin-top:10px;padding-top:8px;border-top:1px dashed var(--line-strong);color:var(--muted);font-size:12px;line-height:1.45}
+@media (max-width:520px){.pay-legend li{grid-template-columns:1fr;gap:4px}}
+@media (max-width:640px){.pay-sum{grid-template-columns:repeat(2,minmax(0,1fr))}}

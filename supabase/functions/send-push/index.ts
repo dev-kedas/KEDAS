@@ -1,8 +1,3 @@
-// Edge Function: admin kirim pengumuman -> disimpan (muncul di lonceng) + dikirim sebagai
-// notifikasi HP (Web Push) ke siswa yang sudah mengaktifkan notifikasi.
-//
-// Deploy:  supabase functions deploy send-push --no-verify-jwt
-// Secrets: supabase secrets set --env-file push-secrets.env
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import webpush from 'npm:web-push@3.6.7';
 
@@ -29,14 +24,12 @@ Deno.serve(async (req) => {
       auth: { persistSession: false },
     });
 
-    // 1. Pastikan pemanggil adalah admin (pemilik organisasi).
     const token = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
     const { data: u, error: ue } = await db.auth.getUser(token);
     if (ue || !u?.user || u.user.is_anonymous) return json({ error: 'Hanya admin yang bisa mengirim notifikasi.' }, 403);
     const { data: cls } = await db.from('classes').select('id, settings').eq('owner_id', u.user.id).maybeSingle();
     if (!cls) return json({ error: 'Kamu belum punya organisasi.' }, 403);
 
-    // 2. Validasi isi.
     const b = await req.json().catch(() => ({}));
     const title = String(b.title ?? '').trim().slice(0, 80);
     const body = String(b.body ?? '').trim().slice(0, 300);
@@ -47,23 +40,19 @@ Deno.serve(async (req) => {
       if (!ids!.length) return json({ error: 'Tidak ada siswa yang dituju.' }, 400);
     }
 
-    // 3. Anti-spam: maksimal 1 pengumuman per 5 detik.
     const { data: last } = await db.from('broadcasts').select('created_at').eq('class_id', cls.id)
       .order('created_at', { ascending: false }).limit(1).maybeSingle();
     if (last && Date.now() - Date.parse(last.created_at) < 5000) return json({ error: 'Tunggu sebentar sebelum mengirim lagi.' }, 429);
 
-    // 4. Siswa tujuan (hanya yang memang ada di organisasi ini).
     const { data: studs } = await db.from('students').select('id').eq('class_id', cls.id);
     const valid = new Set((studs ?? []).map((s: { id: string }) => s.id));
     if (ids) ids = ids.filter((x) => valid.has(x));
     if (ids && !ids.length) return json({ error: 'Tidak ada siswa yang dituju.' }, 400);
 
-    // 5. Simpan (muncul di lonceng siswa).
     const { data: bc, error: be } = await db.from('broadcasts')
       .insert({ class_id: cls.id, title, body, student_ids: ids }).select('id').single();
     if (be) throw be;
 
-    // 6. Cari perangkat tujuan.
     const { data: members } = await db.from('class_members').select('user_id, student_id').eq('class_id', cls.id);
     const want = new Set((members ?? []).filter((m: { student_id: string }) => !ids || ids.includes(m.student_id)).map((m: { user_id: string }) => m.user_id));
     const { data: subs } = await db.from('push_subscriptions').select('endpoint, p256dh, auth, user_id').eq('class_id', cls.id);

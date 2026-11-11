@@ -1,5 +1,5 @@
 import '../styles/auth.css';
-import { $, ic, esc, todayD, iso, moneyField, parseMoney } from '../core/utils.js';
+import { $, ic, esc, todayD, iso, moneyField, parseMoney, initials } from '../core/utils.js';
 import { classDefaults } from '../core/store.js';
 import { getSession } from '../core/session.js';
 import * as db from '../core/db.js';
@@ -48,7 +48,6 @@ function openAuth(to = 'choose', ev) {
   t.finished.finally(() => { card.style.viewTransitionName = ''; root.classList.remove('vt-auth'); });
 }
 export async function logout() { closeDlg(); closeNotif(); await db.signOutAll(); pending = null; showAuth(); }
-// Dibuka dari link bagikan: kode sudah ada di link, jadi langsung minta pilih nama siswa.
 export async function showShareLogin(code) {
   stopScan(); document.body.classList.add('is-auth'); document.body.classList.remove('show-landing', 'booting'); applyTheme();
   try {
@@ -90,12 +89,12 @@ const STEPS = {
     <div class="scan-box"><video id="qrVideo" playsinline muted></video><div class="scan-frame"><i></i></div></div>
     <p class="err" id="a-err" role="alert"></p>`,
 
-  pick: () => `${back('code')}<div class="verified">${ic('check')}<span>organisasi terverifikasi · <b>${esc(pending ? pending.name || '' : '')}</b></span></div>
+  pick: () => `${back('code')}<div class="verified">${ic('check')}<span>Organisasi terverifikasi · <b>${esc(pending ? pending.name || '' : '')}</b></span></div>
     ${shareNotice ? `<div class="share-note">${ic('lock')}<span>Kamu membuka link kas. Masuk dulu sebagai siswa organisasi ini, lalu kamu langsung dibawa ke dashboard.</span></div>` : ''}
     <h2>Kamu siswa yang mana?</h2><p class="auth-sub">Pilih namamu dari daftar organisasi.</p>
     <form id="pickForm"><div id="pickBox"><div class="skel" aria-label="Memuat daftar siswa"></div><p class="skel-txt">Memuat daftar siswa…</p></div><p class="err" id="a-err" role="alert"></p>${submitBtn('Masuk', 'disabled id="pickGo"')}</form>`,
 
-  create: () => { const su = setupUser(); return `${su ? '' : back('home')}<h2>Buat organisasi baru</h2><p class="auth-sub">${su ? `Kamu masuk sebagai <b>${esc(su.email || '')}</b>. Tinggal buat organisasinya.` : 'Kamu akan jadi admin. anggota ditambahkan setelah organisasi dibuat.'}</p>
+  create: () => { const su = setupUser(); return `${su ? '' : back('home')}<h2>Buat organisasi baru</h2><p class="auth-sub">${su ? `Kamu masuk sebagai <b>${esc(su.email || '')}</b>. Tinggal buat organisasinya.` : 'Kamu akan jadi admin. Anggota ditambahkan setelah organisasi dibuat.'}</p>
     <form id="createForm" novalidate autocomplete="off">
       <div class="field"><label for="c-n">Nama organisasi</label><input class="input" id="c-n" name="className" maxlength="40" placeholder="Contoh: organisasi XI IPA 2" required></div>
       <div class="row2"><div class="field"><label for="c-m">Sistem iuran</label><select class="input" id="c-m" name="mode"><option value="weekly">Mingguan</option><option value="monthly">Bulanan</option></select></div>
@@ -107,7 +106,7 @@ const STEPS = {
   confirm: () => `<div class="done-ico">${ic('check')}</div><h2>Cek emailmu</h2><p class="auth-sub">Kami kirim link konfirmasi ke emailmu. Klik link itu, lalu masuk sebagai admin. Organisasinya dibuat setelah kamu masuk.</p>
     <button class="btn primary auth-btn" data-go="admin"><span class="lbl">Ke halaman masuk admin</span></button>`,
 
-  created: () => `<div class="done-ico">${ic('check')}</div><h2>organisasi berhasil dibuat</h2><p class="auth-sub"><b>${esc(created.className)}</b> siap dipakai. Bagikan kode ini ke teman seorganisasi:</p>
+  created: () => `<div class="done-ico">${ic('check')}</div><h2>Organisasi berhasil dibuat</h2><p class="auth-sub"><b>${esc(created.className)}</b> siap dipakai. Bagikan kode ini ke teman seorganisasi:</p>
     <div class="code-box"><b id="newCode">${esc(created.code)}</b><button class="icon-btn" data-copy aria-label="Salin kode">${ic('copy')}</button></div>
     <div class="qr-share"><div class="qr-thumb big"><img id="newQr" alt="QR kode organisasi" width="168" height="168"></div><div class="qr-btns"><button type="button" class="btn" data-qr-share>${ic('share')}Bagikan QR</button><button type="button" class="btn" data-qr-dl>${ic('down')}Unduh QR</button></div></div>
     <p class="hint auth-hint">Tambahkan nama anggota beserta password-nya di Pengaturan › Admin supaya mereka bisa masuk.</p>
@@ -152,10 +151,56 @@ async function loadStudents(t) {
   const box = $('#pickBox'); if (!box) return;
   const list = (pending ? pending.students || [] : []).slice().sort((a, b) => a.name.localeCompare(b.name));
   if (!list.length) { box.innerHTML = '<div class="empty-note">Belum ada anggota terdaftar. Minta admin menambahkan nama kamu dulu.</div>'; return; }
-  box.innerHTML = `<div class="field fade-in"><label for="a-stu">Nama anggota</label><select class="input" id="a-stu" name="sid"><option value="" disabled selected>Pilih namamu…</option>${list.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select></div>
-  <div class="field fade-in"><label for="a-spw">Password</label><input class="input" id="a-spw" name="studentPw" type="password" maxlength="72" autocomplete="current-password" placeholder="Password dari bendahara"></div>`;
+  box.innerHTML = `<div class="field fade-in combo" id="stuCombo"><label for="a-find">Nama anggota</label>
+    <input type="hidden" id="a-stu" name="sid" value="">
+    <div class="combo-box"><input class="input combo-input" id="a-find" name="stu-search" type="text" role="combobox" aria-expanded="false" aria-controls="a-opts" aria-autocomplete="list" placeholder="Pilih atau ketik namamu…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
+    <button type="button" class="combo-chev" tabindex="-1" aria-label="Tampilkan daftar nama"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
+    <ul class="combo-list" id="a-opts" role="listbox" aria-label="Daftar nama anggota" hidden>${list.map((s, i) => `<li class="combo-opt" role="option" id="opt-${i}" aria-selected="false" data-sid="${esc(s.id)}" data-name="${esc(s.name)}" data-n="${esc(s.name.toLowerCase())}">${esc(s.name)}</li>`).join('')}<li class="combo-none" hidden>Nama tidak ditemukan.</li></ul></div>
+  <div class="field fade-in"><label for="a-spw">Password</label><input class="input" id="a-spw" name="studentPw" type="password" maxlength="72" autocomplete="new-password" placeholder="Password dari bendahara"></div>`;
   const chk = () => { $('#pickGo').disabled = !($('#a-stu').value && $('#a-spw').value); };
-  $('#a-stu').onchange = chk;
+  const combo = $('#stuCombo'), inp = $('#a-find'), hid = $('#a-stu'), lst = $('#a-opts'), none = lst.querySelector('.combo-none'), chev = combo.querySelector('.combo-chev');
+  const opts = () => [...lst.querySelectorAll('.combo-opt')], shown = () => opts().filter(x => !x.hidden);
+  let act = -1;
+  const mark = () => {
+    const v = shown(); v.forEach((x, i) => x.classList.toggle('act', i === act));
+    if (act >= 0 && v[act]) { v[act].scrollIntoView({ block: 'nearest' }); inp.setAttribute('aria-activedescendant', v[act].id); } else inp.removeAttribute('aria-activedescendant');
+  };
+  const syncSel = () => opts().forEach(x => { const on = !!hid.value && x.dataset.sid === hid.value; x.classList.toggle('sel', on); x.setAttribute('aria-selected', String(on)); });
+  const setOpen = o => { lst.hidden = !o; inp.setAttribute('aria-expanded', String(o)); combo.classList.toggle('open', o); if (!o) { act = -1; mark(); } };
+  const showAll = () => { opts().forEach(x => { x.hidden = false; }); none.hidden = true; act = -1; mark(); };
+  const filter = () => {
+    const q = inp.value.trim().toLowerCase(); let n = 0;
+    opts().forEach(x => { const hit = !q || x.dataset.n.includes(q); x.hidden = !hit; if (hit) n++; });
+    none.hidden = n > 0; act = q && n ? 0 : -1; mark();
+  };
+  const pick = li => { hid.value = li.dataset.sid; inp.value = li.dataset.name; syncSel(); setOpen(false); inp.blur(); chk(); };
+  const openAll = () => { showAll(); syncSel(); setOpen(true); const s = lst.querySelector('.sel'); if (s) s.scrollIntoView({ block: 'nearest' }); };
+
+  // Browser (Chrome, Google Password Manager) suka mengisi kolom teks di atas kolom password dengan
+  // username tersimpan. Kalau ada isinya padahal belum ada yang dipilih dari daftar, kosongkan lagi.
+  const sweep = () => { if (inp.value && !hid.value && document.activeElement !== inp) inp.value = ''; };
+  [0, 120, 400, 1000, 2000].forEach(ms => setTimeout(sweep, ms));
+  inp.addEventListener('animationstart', sweep);
+  inp.addEventListener('focus', () => { if (lst.hidden) openAll(); });
+  inp.addEventListener('click', () => { if (lst.hidden) openAll(); });
+  inp.addEventListener('input', () => {
+    const t = inp.value.trim().toLowerCase(), ex = list.find(s => s.name.trim().toLowerCase() === t);
+    hid.value = ex ? ex.id : ''; syncSel(); filter(); setOpen(true); chk();
+  });
+  inp.addEventListener('keydown', e => {
+    const v = shown();
+    if (e.key === 'ArrowDown') { e.preventDefault(); if (lst.hidden) openAll(); if (v.length) { act = Math.min(act + 1, v.length - 1); mark(); } }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); if (v.length) { act = Math.max(act - 1, 0); mark(); } }
+    else if (e.key === 'Enter' && !lst.hidden) { const li = v[act] || (v.length === 1 ? v[0] : null); if (li) { e.preventDefault(); pick(li); } }
+    else if (e.key === 'Escape' && !lst.hidden) { e.stopPropagation(); setOpen(false); }
+    else if (e.key === 'Tab') setOpen(false);
+  });
+  lst.addEventListener('mousedown', e => e.preventDefault());
+  lst.addEventListener('click', e => { const li = e.target.closest('.combo-opt'); if (li) pick(li); });
+  chev.addEventListener('mousedown', e => e.preventDefault());
+  chev.addEventListener('click', () => { if (lst.hidden) { openAll(); inp.focus(); } else setOpen(false); });
+  const outside = e => { if (!combo.isConnected) return document.removeEventListener('pointerdown', outside); if (!e.composedPath().includes(combo)) setOpen(false); };
+  document.addEventListener('pointerdown', outside);
   $('#a-spw').oninput = chk;
 }
 

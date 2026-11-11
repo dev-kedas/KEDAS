@@ -89,5 +89,17 @@ h1+.auth-sub{text-align:center;margin-top:4px;margin-bottom:22px}
 .qr-thumb.big{width:184px}
 .qr-btns{display:flex;gap:8px;width:100%}
 .qr-btns .btn{flex:1;padding-inline:10px}
-/* sedang memuat sesi: sembunyikan landing/auth supaya tidak berkedip */
 .booting #landing,.booting #auth{visibility:hidden}
+
+.combo-box{position:relative}
+.combo-input{padding-right:46px}
+.combo-chev{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:36px;height:36px;border:0;border-radius:10px;background:none;display:grid;place-items:center;color:var(--brand-ink);touch-action:manipulation}
+.combo-chev svg{width:16px;height:16px;transition:transform .2s}
+.combo.open .combo-chev svg{transform:rotate(180deg)}
+.combo.open .combo-input{border-color:var(--brand-2);box-shadow:0 0 0 4px var(--ring)}
+.combo-list{list-style:none;margin:0;padding:6px;max-height:min(40vh,240px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);box-shadow:var(--shadow)}
+.combo-list[hidden],.combo-opt[hidden],.combo-none[hidden]{display:none}
+.combo-opt{padding:11px 12px;border-radius:9px;font-weight:500;cursor:pointer;touch-action:manipulation}
+.combo-opt:hover,.combo-opt.act{background:var(--bg)}
+.combo-opt.sel{background:var(--brand-soft);color:var(--brand-ink);font-weight:700}
+.combo-none{padding:12px;color:var(--muted);font-size:13px}

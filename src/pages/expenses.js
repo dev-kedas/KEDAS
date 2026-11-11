@@ -21,8 +21,6 @@ function shrink(file, max = 1024, q = 0.7) {
     img.src = url;
   });
 }
-// Kamera selalu ditawarkan. HP/tablet: kamera bawaan lewat <input capture>. Komputer: webcam lewat
-// getUserMedia, pratinjaunya tampil langsung di dalam form (isi form lain tidak hilang).
 const touch = () => matchMedia('(pointer: coarse)').matches;
 let stream = null;
 function stopCam() { if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; }
@@ -46,7 +44,7 @@ async function openWebcam() {
     return toast(e && e.name === 'NotAllowedError' ? 'Izin kamera ditolak. Izinkan kamera di pengaturan situs browser.'
       : e && e.name === 'NotFoundError' ? 'Kamera tidak ditemukan di perangkat ini.' : 'Kamera tidak bisa dibuka (dipakai aplikasi lain?).');
   }
-  if (!$('#proofBox')) return stopCam();   // dialog sudah ditutup selagi menunggu izin
+  if (!$('#proofBox')) return stopCam();
   $('#proofBox').innerHTML = `<div class="cam"><video id="camV" autoplay playsinline muted></video><div class="cam-bar"><button type="button" class="btn" data-act="camstop">Batal</button><button type="button" class="btn primary" data-act="camshot">${ic('camera')}Ambil foto</button></div></div>`;
   $('#camV').srcObject = stream;
 }

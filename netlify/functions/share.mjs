@@ -1,4 +1,3 @@
-// Netlify: /s/:type/:code (path diatur di config di bawah, tanpa netlify.toml)
 import { buildShare, CACHE } from '../../server/share-core.js';
 
 export default async (req, context) => {

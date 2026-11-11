@@ -1,10 +1,4 @@
--- =====================================================================
--- KEDAS - update skema #2: notifikasi HP (push) + riwayat pengumuman
--- Jalankan SETELAH schema.sql dan schema_update.sql, cukup sekali.
--- Dashboard Supabase > SQL Editor > New query > paste semua > Run
--- =====================================================================
 
--- ---------- 1. Langganan push (1 baris = 1 browser/HP) ----------------
 create table if not exists public.push_subscriptions (
   endpoint   text primary key,
   user_id    uuid not null references auth.users(id) on delete cascade,
@@ -18,13 +12,10 @@ create index if not exists push_subscriptions_class on public.push_subscriptions
 create index if not exists push_subscriptions_user  on public.push_subscriptions (user_id);
 alter table public.push_subscriptions enable row level security;
 
--- baca: baris sendiri, atau (admin) semua di organisasinya (untuk menghitung jangkauan)
 drop policy if exists push_select on public.push_subscriptions;
 create policy push_select on public.push_subscriptions for select to authenticated
   using (user_id = auth.uid() or public.is_class_owner(class_id));
--- tulis/hapus hanya lewat RPC di bawah
 
--- Simpan langganan milik pengguna yang sedang login (admin atau siswa anggota).
 create or replace function public.save_push_subscription(p_endpoint text, p_p256dh text, p_auth text, p_ua text default '')
 returns void language plpgsql security definer set search_path = public as $$
 declare cid uuid;
@@ -50,8 +41,6 @@ revoke execute on function public.remove_push_subscription(text)                
 grant  execute on function public.save_push_subscription(text, text, text, text) to authenticated;
 grant  execute on function public.remove_push_subscription(text)                 to authenticated;
 
--- ---------- 2. Pengumuman dari admin (muncul juga di lonceng aplikasi) ----
--- student_ids null = semua siswa; berisi = hanya siswa tersebut.
 create table if not exists public.broadcasts (
   id          uuid primary key default gen_random_uuid(),
   class_id    uuid not null references public.classes(id) on delete cascade,
@@ -73,12 +62,10 @@ create policy broadcasts_select on public.broadcasts for select to authenticated
         and (broadcasts.student_ids is null or m.student_id = any (broadcasts.student_ids))
     )
   );
--- insert dilakukan oleh Edge Function send-push (service role) setelah cek admin.
 drop policy if exists broadcasts_delete on public.broadcasts;
 create policy broadcasts_delete on public.broadcasts for delete to authenticated
   using (public.is_class_owner(class_id));
 
--- realtime supaya lonceng siswa langsung bertambah
 do $$ begin
   alter publication supabase_realtime add table public.broadcasts;
 exception when duplicate_object then null; end $$;

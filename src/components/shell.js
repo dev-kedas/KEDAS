@@ -3,12 +3,27 @@ import { S } from '../core/store.js';
 import { notifications } from '../core/calc.js';
 import { openDlg } from '../core/ui.js';
 import { isAdmin, getSession, userName } from '../core/session.js';
+import { UPDATES } from '../core/updates.js';
 
 const bcastNotifs = () => (S.broadcasts || []).map(b => ({ id: 'b|' + b.id, type: 'info', title: b.title, text: b.body, ts: b.ts, bc: true }));
-export function visibleNotifs(c) {
+const TAGS = { baru: 'Baru', perbaikan: 'Perbaikan', info: 'Info' };
+const KEDAS_DAYS = 60, KEDAS_MIN = 3;
+const updNotifs = () => {
+  const have = new Set((S.kedasUpdates || []).map(u => u.id));
+  const all = [...(S.kedasUpdates || []), ...UPDATES.filter(u => !have.has(u.id))].sort((a, b) => b.ts - a.ts);
+  const fresh = all.filter(u => Date.now() - u.ts < KEDAS_DAYS * 864e5);
+  return (fresh.length >= KEDAS_MIN ? fresh : all.slice(0, KEDAS_MIN))
+    .map(u => ({ id: 'u|' + u.id, type: 'info', title: u.title, text: u.items.map(i => '\u2022 ' + i).join('\n'), ts: u.ts, bc: true, up: true, tag: u.tag }));
+};
+let notifTab = 'org';
+export const setNotifTab = t => { notifTab = t === 'kedas' ? 'kedas' : 'org'; };
+// tab: 'org' = pengumuman + pengingat iuran, 'kedas' = kabar dari KEDAS, kosong = semuanya
+export function visibleNotifs(c, tab) {
   const all = notifications(c), s = getSession();
-  if (isAdmin()) return all;
-  return [...bcastNotifs(), ...all.filter(n => s && n.sid === s.studentId)];
+  const org = isAdmin() ? all : [...bcastNotifs(), ...all.filter(n => s && n.sid === s.studentId)];
+  if (tab === 'org') return org;
+  if (tab === 'kedas') return updNotifs();
+  return [...updNotifs(), ...org];
 }
 function ago(ts) {
   const m = Math.max(0, Math.round((Date.now() - ts) / 60000));
@@ -78,7 +93,7 @@ export function renderShell(c, pages, current) {
     ${isAdmin() ? `<button class="btn-add" data-act="quick">${ic('plus')}<span>Tambah transaksi</span></button>` : '<div style="height:14px"></div>'}
     <nav class="side-nav" aria-label="Menu utama"><span class="ind" aria-hidden="true"></span>${list.map(p => `
       <a class="nav-link" href="#${p.id}" title="${p.nav}">${ic(p.icon)}<span>${p.nav}</span>${p.id === 'payments' && nTunggak ? `<em class="nav-badge" title="${nTunggak} anggota menunggak">${nTunggak}</em>` : ''}</a>`).join('')}</nav>
-    <div class="side-foot"><div class="side-user"><span class="avatar">${esc(initials(userName() || '?'))}</span><div><b>${esc(userName())}</b><small>${isAdmin() ? 'Admin organisasi' : 'anggota'}</small></div><button data-act="logout" aria-label="Keluar" title="Keluar">${ic('logout')}`;
+    <div class="side-foot"><div class="side-user"><span class="avatar">${esc(initials(userName() || '?'))}</span><div><b>${esc(userName())}</b><small>${isAdmin() ? 'Admin organisasi' : 'Anggota'}</small></div><button data-act="logout" aria-label="Keluar" title="Keluar">${ic('logout')}`;
   setHtml('#sidebar', side);
 
   const tab = p => `<a class="tab" href="#${p.id}"><span class="ti">${ic(p.icon)}${p.id === 'payments' && nTunggak ? '<i class="tab-dot"></i>' : ''}</span>${p.tab}</a>`;
@@ -93,12 +108,18 @@ export function renderShell(c, pages, current) {
   $('#pageSub').textContent = `${S.settings.className} · ${fmt(todayD(), { weekday: 'long', day: 'numeric', month: 'long' })}`;
   document.title = `${pages[current].title} · Kas Organisasi`;
 
-  const ns = visibleNotifs(c), ids = new Set([...notifications(c).map(n => n.id), ...bcastNotifs().map(n => n.id)]);
+  const orgList = visibleNotifs(c, 'org'), kedasList = visibleNotifs(c, 'kedas');
+  const ids = new Set([...notifications(c).map(n => n.id), ...bcastNotifs().map(n => n.id), ...updNotifs().map(n => n.id)]);
   const pruned = S.readNotifs.filter(id => ids.has(id));
   if (pruned.length !== S.readNotifs.length) S.readNotifs = pruned;
-  const unread = ns.filter(n => !S.readNotifs.includes(n.id)).length;
+  const isUnread = n => !S.readNotifs.includes(n.id);
+  const uOrg = orgList.filter(isUnread).length, uKedas = kedasList.filter(isUnread).length, unread = uOrg + uKedas;
+  const ns = notifTab === 'kedas' ? kedasList : orgList, uTab = notifTab === 'kedas' ? uKedas : uOrg;
   $('#bellBtn').innerHTML = ic('bell') + (unread ? `<span class="badge">${unread > 99 ? '99+' : unread}</span>` : '');
-  $('#notifPanel').innerHTML = `<div class="np-head"><b>Notifikasi${unread ? ` (${unread} baru)` : ''}</b>${unread ? `<button class="np-read" data-act="readall" aria-label="Tandai semua dibaca" title="Tandai semua dibaca">${ic('checks')}</button>` : ''}</div>` +
-    (ns.length ? ns.map(n => `<button class="np-item ${S.readNotifs.includes(n.id) ? '' : 'unread'}" data-act="notif" data-id="${esc(n.id)}" data-sid="${n.sid || ''}"><span class="np-dot ${n.type}">${ic(KIND[n.type])}</span><span><b>${esc(n.title)}</b>${n.bc ? `${n.text ? `<p>${esc(n.text)}</p>` : ''}<p class="np-time">${ago(n.ts)}</p>` : `<p>${esc(n.text)}</p><p><strong>${rp(n.sisa)}</strong> · jatuh tempo ${fmt(n.due)}</p>`}</span></button>`).join('')
-      : `<div class="np-empty">${ic('check', 'width="32" height="32"')}<p>${isAdmin() ? 'Semua pembayaran aman. Tidak ada pengingat.' : 'Iuranmu aman. Tidak ada pengingat.'}</p></div>`);
+  const tabBtn = (id, label, n) => `<button type="button" class="np-tab${notifTab === id ? ' on' : ''}" role="tab" aria-selected="${notifTab === id}" data-act="ntab" data-id="${id}">${label}${n ? `<i class="np-n">${n > 99 ? '99+' : n}</i>` : ''}</button>`;
+  const empty = notifTab === 'kedas' ? 'Belum ada kabar dari KEDAS.' : isAdmin() ? 'Semua pembayaran aman. Tidak ada pengingat.' : 'Iuranmu aman. Tidak ada pengingat.';
+  $('#notifPanel').innerHTML = `<div class="np-head"><b>Notifikasi</b>${uTab ? `<button class="np-read" data-act="readall" aria-label="Tandai semua dibaca di tab ini" title="Tandai semua dibaca">${ic('checks')}</button>` : ''}</div>` +
+    `<div class="np-tabs" role="tablist" aria-label="Jenis notifikasi">${tabBtn('org', 'Organisasi', uOrg)}${tabBtn('kedas', 'KEDAS', uKedas)}</div>` +
+    (ns.length ? ns.map(n => `<button class="np-item ${isUnread(n) ? 'unread' : ''}" data-act="notif" data-id="${esc(n.id)}" data-sid="${n.sid || ''}"><span class="np-dot ${n.type}">${ic(KIND[n.type])}</span><span><b>${n.tag ? `<em class="np-tag ${esc(n.tag)}">${esc(TAGS[n.tag] || 'Info')}</em>` : ''}${esc(n.title)}</b>${n.bc ? `${n.text ? `<p${n.up ? ' class="np-up"' : ''}>${esc(n.text)}</p>` : ''}<p class="np-time">${ago(n.ts)}</p>` : `<p>${esc(n.text)}</p><p><strong>${rp(n.sisa)}</strong> · jatuh tempo ${fmt(n.due)}</p>`}</span></button>`).join('')
+      : `<div class="np-empty">${ic('check', 'width="32" height="32"')}<p>${empty}</p></div>`);
 }

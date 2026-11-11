@@ -1,5 +1,3 @@
-// Link bagikan: /s/<bagian>/<kode organisasi>
-// Penerima membuka link -> diminta masuk sebagai siswa organisasi itu -> langsung ke dashboard.
 
 export const SECTIONS = [
   { id: 'dashboard',   title: 'Dashboard lengkap', desc: 'Saldo, pemasukan, pengeluaran, dan riwayat terbaru',  icon: 'home',    tone: 'in' },
@@ -15,12 +13,11 @@ export const norm = s => String(s || '').toUpperCase().replace(/[\s-]/g, '');
 export const shareUrl = (type, code, photo = '') => `${location.origin}/s/${type}/${encodeURIComponent(code)}${photo ? '/' + photo : ''}`;
 
 let cur = null;
-// Dipanggil sekali saat aplikasi dibuka. Mengambil tujuan dari URL lalu membersihkan URL-nya.
 export function captureShare() {
   try {
     const q = new URLSearchParams(location.search);
     let type = q.get('share'), code = q.get('code');
-    const m = location.pathname.match(/^\/s\/([a-z]+)\/?([^/]*)/i);   // kalau fungsi pratinjau tidak aktif
+    const m = location.pathname.match(/^\/s\/([a-z]+)\/?([^/]*)/i);
     if (m) { type = m[1]; code = decodeURIComponent(m[2] || ''); }
     if (type) {
       cur = { type: IDS.includes(type) ? type : 'dashboard', code: String(code || '').toUpperCase() };
@@ -33,7 +30,6 @@ export function captureShare() {
 export const getShare = () => cur;
 export function clearShare() { cur = null; try { sessionStorage.removeItem(KEY); } catch { } }
 
-// Sorot bagian yang dibagikan setelah dashboard tampil.
 export function flashSection(type) {
   if (!type || type === 'dashboard') return;
   const el = document.querySelector(`[data-sec="${type}"]`); if (!el) return;

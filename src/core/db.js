@@ -50,13 +50,14 @@ async function fetchAll(table, cols, classId) {
 }
 
 export async function loadAll(classId) {
-  const [cls, students, payments, expenses, reads, bcs] = await Promise.all([
+  const [cls, students, payments, expenses, reads, bcs, kus] = await Promise.all([
     sb.from('classes').select('id, code, settings').eq('id', classId).maybeSingle(),
     fetchAll('students', 'id, name', classId),
     fetchAll('payments', PAY_COLS, classId),
     fetchAll('expenses', EXP_COLS, classId),
     sb.from('notif_reads').select('notif_id'),
     sb.from('broadcasts').select('id, title, body, created_at').eq('class_id', classId).order('created_at', { ascending: false }).limit(30),
+    sb.from('kedas_updates').select('id, tag, title, items, created_at').order('created_at', { ascending: false }).limit(30),
   ]);
   if (cls.error) throw cls.error;
   if (!cls.data) return false;
@@ -67,7 +68,7 @@ export async function loadAll(classId) {
     payments: payments.map(toPay),
     expenses: expenses.map(toExp),
     readNotifs: reads.data.map(r => r.notif_id),
-    // kalau tabel broadcasts belum dibuat (schema_update2.sql belum dijalankan), aplikasi tetap jalan
+    kedasUpdates: kus.error ? [] : kus.data.map(r => ({ id: r.id, tag: r.tag, title: r.title, items: r.items || [], ts: Date.parse(r.created_at) })),
     broadcasts: bcs.error ? [] : bcs.data.map(r => ({ id: r.id, title: r.title, body: r.body || '', ts: Date.parse(r.created_at) })),
   }));
   return true;
@@ -156,16 +157,12 @@ export async function addPayment({ studentId, amount, date, note }) {
   const r = must(await sb.from('payments').insert({ class_id: cid(), student_id: studentId, amount, paid_on: date, note }).select(PAY_COLS).single());
   put(S.payments, toPay(r));
 }
-// Banyak anggota bayar bersamaan: satu INSERT = semua tersimpan atau tidak sama sekali.
 export async function addPayments(list) {
   if (!list.length) return;
   const rows = list.map(p => ({ class_id: cid(), student_id: p.studentId, amount: p.amount, paid_on: p.date, note: p.note }));
   const data = must(await sb.from('payments').insert(rows).select(PAY_COLS));
   data.forEach(r => put(S.payments, toPay(r)));
 }
-// Gambar pratinjau link bagikan: bucket publik 'share-photos' (folder = id organisasi), supaya crawler
-// WhatsApp/Telegram bisa mengambilnya tanpa login. Nama file = hash isi gambar, jadi data yang sama
-// tidak menumpuk file baru (duplikat dianggap berhasil).
 export async function uploadSharePhoto(blob, name) {
   const { error } = await sb.storage.from('share-photos').upload(`${cid()}/${name}.jpg`, blob, { contentType: 'image/jpeg', cacheControl: '31536000', upsert: false });
   if (error && !/already exists|duplicate|409/i.test(String(error.message || '') + String(error.statusCode || ''))) throw error;
@@ -260,7 +257,6 @@ export function markRead(ids) {
     .then(() => { }, () => { });
 }
 
-// Kirim pengumuman: disimpan (muncul di lonceng siswa) + dikirim sebagai notifikasi HP.
 export async function sendBroadcast({ title, body, studentIds }) {
   const { data, error } = await sb.functions.invoke('send-push', { body: { title, body, studentIds } });
   if (error) {
@@ -274,7 +270,6 @@ export async function sendBroadcast({ title, body, studentIds }) {
   return data;
 }
 
-// id siswa yang sudah mengaktifkan notifikasi HP (untuk info jangkauan di dialog kirim).
 export async function pushReach() {
   const id = cid();
   const [subs, mem] = await Promise.all([
@@ -287,7 +282,6 @@ export async function pushReach() {
   return new Set(mem.data.filter(m => users.has(m.user_id)).map(m => m.student_id));
 }
 
-// Ganti seluruh isi (Muat Excel, Mulai dari kosong, Data contoh) dalam satu transaksi di server.
 export async function replaceAll({ students, payments, expenses }) {
   const map = new Map(students.map(s => [s.id, crypto.randomUUID()]));
   must(await sb.rpc('replace_class_data', {
@@ -312,7 +306,7 @@ export function startRealtime(cb) {
   stopRealtime();
   onRemote = cb;
   channel = sb.channel('kedas-' + cid());
-  ['classes', 'students', 'payments', 'expenses', 'broadcasts'].forEach(table => channel.on('postgres_changes', { event: '*', schema: 'public', table }, ping));
+  ['classes', 'students', 'payments', 'expenses', 'broadcasts', 'kedas_updates'].forEach(table => channel.on('postgres_changes', { event: '*', schema: 'public', table }, ping));
   channel.subscribe();
   document.addEventListener('visibilitychange', onVis);
 }

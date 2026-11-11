@@ -56,7 +56,7 @@ export function toSheets(S, rows) {
   const names = new Map(S.students.map(s => [s.id, s.name]));
   return [
     { name: 'Pengaturan', head: ['Bagian', 'Pengaturan', 'Nilai'], rows: FIELDS.map(([sec, label, path]) => [sec, label, displayValue(S, path)]) },
-    { name: 'anggota', head: ['Nama anggota', 'Tanggal terakhir bayar', 'Sudah dibayar', 'Wajib dibayar', 'Tunggakan', 'Status'], money: [2, 3, 4],
+    { name: 'Anggota', head: ['Nama anggota', 'Tanggal terakhir bayar', 'Sudah dibayar', 'Wajib dibayar', 'Tunggakan', 'Status'], money: [2, 3, 4],
       rows: rows.map(r => [r.st.name, r.pays[0] ? r.pays[0].date : '', r.paid, r.wajib, r.sisa, STATUS_LABEL[r.status]]) },
     { name: 'Pembayaran', head: ['Nama anggota', 'Tanggal', 'Jumlah', 'Catatan'], money: [2],
       rows: S.payments.filter(p => names.has(p.studentId)).map(p => [names.get(p.studentId), p.date, p.amount, p.note]) },

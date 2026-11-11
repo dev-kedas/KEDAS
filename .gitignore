@@ -1,9 +1,7 @@
-# dependencies & build
 node_modules/
 dist/
 .vite/
 
-# secrets & env (jangan pernah di-commit)
 .env
 .env.*
 *.env
@@ -11,17 +9,17 @@ push-secrets.env
 *.pem
 *.key
 
-# hosting & tooling
 .vercel/
 .netlify/
 supabase/.temp/
 supabase/.branches/
 
-# logs, editor, OS
 *.log
 npm-debug.log*
 .DS_Store
 Thumbs.db
 .idea/
 .vscode/
-conflicts.txt.env.example
+conflicts.txt
+!.env.example
+.kedas-admin.env

@@ -1,6 +1,3 @@
-// Gambar pratinjau link bagikan (1200x630): ringkasan dashboard — saldo, pemasukan, pengeluaran.
-// Sengaja TANPA riwayat transaksi dan tanpa nama anggota. Dibuat di browser admin lalu diunggah,
-// supaya crawler WhatsApp/Telegram bisa mengambilnya sebagai og:image.
 import { rp, fmt } from './utils.js';
 
 const W = 1200, H = 630, FONT = '"Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
@@ -48,7 +45,6 @@ export async function renderShareCard({ className, balance, income, expense, dat
 
   g.fillStyle = '#eef3f0'; g.fillRect(0, 0, W, H);
 
-  // header: logo + nama + tanggal
   const logo = await loadImg('/logo.svg');
   if (logo) g.drawImage(logo, 64, 38, 64, 64);
   g.textAlign = 'left'; g.fillStyle = '#10231c'; g.font = `800 32px ${FONT}`; g.fillText('Kas Organisasi', 146, 66);
@@ -56,7 +52,6 @@ export async function renderShareCard({ className, balance, income, expense, dat
   g.textAlign = 'right'; g.fillStyle = '#44574f'; g.font = `600 23px ${FONT}`;
   g.fillText(`Per ${fmt(date, { day: 'numeric', month: 'long', year: 'numeric' })}`, W - 64, 78);
 
-  // hero: saldo
   const neg = balance < 0, hx = 64, hy = 132, hw = W - 128, hh = 214;
   const grad = g.createLinearGradient(hx, hy, hx + hw, hy + hh);
   if (neg) { grad.addColorStop(0, '#8e2a20'); grad.addColorStop(1, '#c0392b'); } else { grad.addColorStop(0, '#0b3d2e'); grad.addColorStop(1, '#14654c'); }
@@ -75,7 +70,6 @@ export async function renderShareCard({ className, balance, income, expense, dat
   const rw2 = g.measureText('Rp').width + 12;
   g.font = `800 ${px}px ${FONT}`; g.fillText(t, hx + 48 + rw2, base);
 
-  // pemasukan & pengeluaran
   const cy = 374, ch = 178, gap = 32, cw = (hw - gap) / 2;
   statCard(g, hx, cy, cw, ch, 'in', 'Total pemasukan', income);
   statCard(g, hx + cw + gap, cy, cw, ch, 'out', 'Total pengeluaran', expense);

@@ -81,3 +81,5 @@ html[data-mode=dark] select.input{background-image:url("data:image/svg+xml,%3Csv
   html[data-mode=dark] select.input::picker-icon{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9cdc3' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")}
   html[data-mode=dark] select.input option::checkmark{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9cdc3' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5 9-10'/%3E%3C/svg%3E")}
 }
+
+@supports (-webkit-touch-callout:none){.input,select.input,textarea.input{font-size:16px}}

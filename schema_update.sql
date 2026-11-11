@@ -1,11 +1,4 @@
--- =====================================================================
--- KEDAS - update skema (jalankan SETELAH schema.sql, cukup sekali)
--- Dashboard Supabase > SQL Editor > New query > paste semua > Run
--- Belum dites langsung di project lu. Kalau ada error, kirim teksnya.
--- =====================================================================
 
--- ---------- 1. Foto bukti pengeluaran -------------------------------
--- Foto disimpan di tabel terpisah supaya daftar pengeluaran tetap ringan.
 
 alter table public.expenses add column if not exists has_photo boolean not null default false;
 alter table public.expenses add constraint expenses_id_class_unique unique (id, class_id);
@@ -13,7 +6,7 @@ alter table public.expenses add constraint expenses_id_class_unique unique (id, 
 create table public.expense_photos (
   expense_id uuid primary key,
   class_id   uuid not null references public.classes(id) on delete cascade,
-  photo      text not null check (length(photo) < 600000),   -- batas ~600 KB per foto
+  photo      text not null check (length(photo) < 600000),
   foreign key (expense_id, class_id) references public.expenses(id, class_id) on delete cascade
 );
 alter table public.expense_photos enable row level security;
@@ -23,14 +16,11 @@ create policy photos_select on public.expense_photos for select to authenticated
 create policy photos_write on public.expense_photos for all to authenticated
   using (public.is_class_owner(class_id)) with check (public.is_class_owner(class_id));
 
--- ---------- 2. Satu akun admin = satu organisasi ---------------------
 
 create unique index if not exists classes_owner_unique on public.classes (owner_id);
 
--- kode organisasi unik tanpa peduli huruf besar/kecil dan tanda hubung
 create unique index if not exists classes_code_norm on public.classes (upper(replace(code, '-', '')));
 
--- ---------- 3. Cek kode & gabung (toleran format kode) ---------------
 
 create or replace function public.preview_class(p_code text)
 returns jsonb language sql stable security definer set search_path = public as $$
@@ -64,14 +54,11 @@ begin
   return cid;
 end $$;
 
--- preview boleh dipanggil sebelum anggota punya sesi (supaya tidak membuat akun anonim untuk kode yang salah)
 revoke execute on function public.preview_class(text)    from public;
 revoke execute on function public.join_class(text, uuid) from public, anon;
 grant  execute on function public.preview_class(text)    to anon, authenticated;
 grant  execute on function public.join_class(text, uuid) to authenticated;
 
--- ---------- 4. Ganti seluruh data sekaligus (Muat Excel / kosongkan / contoh)
--- security invoker = tetap tunduk RLS; hanya admin organisasi yang lolos.
 
 create or replace function public.replace_class_data(
   p_class uuid, p_students jsonb, p_payments jsonb, p_expenses jsonb)
@@ -82,7 +69,7 @@ begin
   end if;
 
   delete from public.payments where class_id = p_class;
-  delete from public.expenses where class_id = p_class;   -- foto ikut terhapus (cascade)
+  delete from public.expenses where class_id = p_class;
   delete from public.students where class_id = p_class;
 
   insert into public.students (id, class_id, name)

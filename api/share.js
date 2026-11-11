@@ -1,4 +1,3 @@
-// Vercel: /s/:type/:code  ->  /api/share  (lihat vercel.json)
 import { buildShare, CACHE } from '../server/share-core.js';
 
 export default async function handler(req, res) {

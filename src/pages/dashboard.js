@@ -36,7 +36,7 @@ function adminBar() {
 function pushBanner(skipIos = false) {
   if (isAdmin() || bannerHidden()) return '';
   const st = pushState();
-  if (skipIos && st === 'ios-install') return '';   // banner pasang aplikasi sudah memuat langkah iPhone
+  if (skipIos && st === 'ios-install') return '';
   if (st === 'off') return `<div class="card push-banner"><span class="ico in">${ic('bell')}</span><div><b>Aktifkan notifikasi HP</b><small>Dapat info kas langsung di HP, walau aplikasi sedang ditutup.</small></div><button class="btn sm primary" data-act="pushon">Aktifkan</button><button class="icon-btn" data-act="pushlater" aria-label="Nanti saja">${ic('x')}</button></div>`;
   if (st === 'ios-install') return `<div class="card push-banner"><span class="ico in">${ic('bell')}</span><div><b>Notifikasi di iPhone</b><small>Tekan Bagikan › Tambah ke Layar Utama, buka KEDAS dari ikonnya, lalu aktifkan di Pengaturan.</small></div><button class="icon-btn" data-act="pushlater" aria-label="Tutup">${ic('x')}</button></div>`;
   return '';

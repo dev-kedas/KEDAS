@@ -1,10 +1,3 @@
-// Halaman pratinjau untuk link bagikan (/s/<bagian>/<kode>).
-// Crawler WhatsApp/Telegram/dll tidak menjalankan JavaScript, jadi meta tag OG harus
-// sudah ada di HTML. Pengguna biasa langsung diarahkan ke aplikasi (/?share=...&code=...),
-// lalu aplikasi meminta mereka masuk sebagai siswa organisasi tersebut.
-//
-// Gambar pratinjau (og:image) dibuat aplikasi admin: ringkasan saldo, pemasukan, pengeluaran — tanpa riwayat
-// dan nama anggota. Isi lengkap dashboard tetap hanya terlihat setelah login.
 
 export const SECTIONS = {
   dashboard:   { title: 'Dashboard kas',  desc: 'Ringkasan saldo, pemasukan, dan pengeluaran kas.' },
@@ -38,7 +31,6 @@ export async function buildShare({ origin, type, code, photo, supabaseUrl, key }
   const info = SECTIONS[sec];
   const title = org ? `${info.title} · ${org}` : `${info.title} · KEDAS`;
   const desc = `${info.desc} Masuk sebagai siswa organisasi ini untuk membuka.`;
-  // Foto pilihan admin (bucket publik share-photos/<id organisasi>/<token>.jpg); tanpa foto -> gambar bawaan.
   const tok = /^[A-Za-z0-9_-]{6,32}$/.test(photo || '') ? photo : '';
   const custom = tok && cls.id && /^[0-9a-f-]{36}$/i.test(cls.id) && supabaseUrl
     ? `${String(supabaseUrl).replace(/\/+$/, '')}/storage/v1/object/public/share-photos/${cls.id}/${tok}.jpg` : '';

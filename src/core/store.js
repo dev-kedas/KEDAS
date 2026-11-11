@@ -5,6 +5,7 @@ export function normalize(d) {
   const df = classDefaults();
   d.readNotifs = d.readNotifs || [];
   d.broadcasts = d.broadcasts || [];
+  d.kedasUpdates = d.kedasUpdates || [];
   d.settings = { ...df, ...d.settings, theme: { ...df.theme, ...(d.settings && d.settings.theme) } };
   return d;
 }

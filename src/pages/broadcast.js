@@ -1,4 +1,3 @@
-// Admin: bagikan dashboard lewat satu link (pratinjau = gambar ringkasan) + kirim notifikasi. Semua: kartu notifikasi HP (aktif/matikan).
 import '../styles/pages/broadcast.css';
 import { $, ic, esc, rp, iso, todayD } from '../core/utils.js';
 import { S } from '../core/store.js';
@@ -11,7 +10,6 @@ import { render as rerender } from '../core/router.js';
 import * as db from '../core/db.js';
 import * as push from '../core/push.js';
 
-/* ---------- Bagikan link ---------- */
 
 async function copyText(t) {
   try { await navigator.clipboard.writeText(t); return true; } catch { }
@@ -21,9 +19,6 @@ async function copyText(t) {
   } catch { return false; }
 }
 
-// Satu-satunya opsi bagikan: dashboard. Pratinjau link = gambar ringkasan (saldo, pemasukan, pengeluaran),
-// dibuat dari data saat ini lalu diunggah SEBELUM tombol Bagikan aktif, supaya menu bagikan HP
-// terbuka seketika saat ditekan (browser menolak share kalau terlalu lama setelah ketukan).
 let card = null;
 async function tokenFor(key) {
   try {
@@ -66,7 +61,6 @@ async function shareDash() {
   toast(await copyText(url) ? 'Link disalin (perangkat ini tak punya menu bagikan)' : 'Gagal menyalin link');
 }
 
-/* ---------- Kirim notifikasi ---------- */
 
 function template(id) {
   const s = S.settings, per = s.mode === 'monthly' ? 'bulan ini' : 'minggu ini';
@@ -98,7 +92,6 @@ function notifDlg() {
   }).catch(() => { const el = $('#n-reach'); if (el) el.textContent = 'Pesan masuk ke lonceng aplikasi, dan ke HP siswa yang sudah mengaktifkan notifikasi.'; });
 }
 
-/* ---------- Kartu notifikasi HP (Pengaturan) ---------- */
 
 export function pushCard() {
   const st = push.pushState();

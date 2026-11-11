@@ -73,3 +73,35 @@ Siswa mengaktifkannya dari banner di Dashboard atau Pengaturan › Pengguna › 
    Variabel `VITE_SUPABASE_URL` dan `VITE_SUPABASE_PUBLISHABLE_KEY` harus ada di pengaturan hosting.
 
 `push-secrets.env` berisi kunci privat, jangan di-commit.
+
+## 📣 Kabar KEDAS (tab KEDAS di notifikasi)
+
+Dikirim dari terminal, tanpa deploy ulang. Masuk ke tab KEDAS semua pengguna di semua organisasi, plus push ke HP yang sudah mengaktifkan notifikasi.
+
+### Pasang sekali
+1. Supabase > SQL Editor: jalankan `schema_update4.sql`.
+2. Buat secret panjang (min. 16 karakter) lalu deploy:
+   ```
+   supabase secrets set KEDAS_ADMIN_SECRET=isi-secret-panjang-kamu
+   supabase functions deploy send-kedas-update --no-verify-jwt
+   ```
+3. Simpan secret yang sama di `.kedas-admin.env` (sudah di-.gitignore):
+   ```
+   KEDAS_ADMIN_SECRET=isi-secret-panjang-kamu
+   ```
+   `VITE_SUPABASE_URL` dibaca otomatis dari `.env`.
+
+### Kirim
+```
+npm run kedas:update -- "Judul" "Poin 1" "Poin 2" --tag=baru
+npm run kedas:update -- "Judul" "Poin" --no-push      # tab KEDAS saja, tanpa push
+npm run kedas:update -- --hapus <id>                  # hapus kabar yang salah
+```
+`--tag`: `baru`, `perbaikan`, atau `info`. Tanpa npm: `node scripts/kedas-update.mjs ...`.
+
+Pakai curl:
+```
+curl -X POST https://<project>.supabase.co/functions/v1/send-kedas-update \
+  -H "Content-Type: application/json" -H "x-admin-secret: <secret>" \
+  -d '{"title":"Judul","items":["Poin 1","Poin 2"],"tag":"baru","push":true}'
+```
