@@ -53,9 +53,13 @@ function userSection() {
     <div class="card"><h2>Akun</h2>
       <div class="who"><span class="avatar">${esc(initials(userName() || '?'))}</span><div><b>${esc(userName())}</b><small>${isAdmin() ? 'Admin organisasi' : 'Anggota'} · ${esc(S.settings.className)}</small></div></div>
       <button class="btn" data-act="logout">${ic('logout')}Keluar</button></div>
-    ${installCard()}
+        ${installCard()}
     ${pushCard()}
-  </div>
+    <div class="card legal-card"><h2>Tentang</h2>
+      <p class="hint">KEDAS memakai komponen sumber terbuka. Daftar lisensinya bisa dibaca di sini.</p>
+      <a class="legal-link" href="/THIRD_PARTY_LICENSES.txt" target="_blank" rel="noopener">Lisensi pihak ketiga</a>
+    </div>
+    </div>
   <div class="card"><h2>Tampilan</h2>
     <div class="field"><label>Tema yang dipakai</label>
       ${seg('psrc', [['own', 'Tema saya', 'user'], ['class', 'Tema organisasi', 'users']], useClass ? 'class' : 'own', forced)}

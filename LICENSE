@@ -1,0 +1,46 @@
+KEDAS Source-Available License
+
+Copyright (c) 2026 KEDAS. All rights reserved.
+
+The source code in this repository is publicly visible for transparency and
+reference only. It is not open-source software.
+
+PERMITTED
+
+- Viewing and reading the source code.
+- Forking this repository on GitHub, as allowed by the GitHub Terms of
+  Service, for viewing and for proposing contributions back to this
+  repository.
+- Using the hosted KEDAS application as provided by the owner.
+
+NOT PERMITTED WITHOUT PRIOR WRITTEN PERMISSION
+
+- Copying, modifying, or redistributing the source code or any part of it,
+  in source or compiled form.
+- Hosting your own copy or derived version of KEDAS, or offering it to
+  others as a service.
+- Using the KEDAS name, logo, or branding.
+
+THIRD-PARTY COMPONENTS
+
+KEDAS includes third-party open-source components, each licensed under its
+own terms. Their license notices are listed in public/THIRD_PARTY_LICENSES.txt.
+Nothing in this license limits your rights under those licenses.
+
+CONTRIBUTIONS
+
+If you submit a contribution to this repository, you grant the copyright
+holder a perpetual, worldwide, royalty-free license to use, modify, and
+distribute it as part of KEDAS.
+
+NO WARRANTY
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
+IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+To request permission, contact: [artaagottaimprove@gmail.com]
