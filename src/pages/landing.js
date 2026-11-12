@@ -7,7 +7,7 @@ const LINKS = {
   saweria: 'https://saweria.co/KEDAS',
   trakteer: 'https://trakteer.id/kedass',
   kofi: 'https://ko-fi.com/KEDAS',
-  sponsors: 'https://github.com/sponsors/dev-kedas',
+  sociabuzz: 'https://sociabuzz.com/KEDAS/support',
 };
 
 const NAV_H = 68;
@@ -22,7 +22,7 @@ const SUPPORT = [
   { k: 'saweria', name: 'Saweria', desc: 'Dukung lewat QRIS, e-wallet, atau transfer bank.', icon: HEART, c: '#f5a623' },
   { k: 'trakteer', name: 'Trakteer', desc: 'Traktir es kopi atau camilan buat developer.', icon: COFFEE, c: '#e0364f' },
   { k: 'kofi', name: 'Ko-fi', desc: 'Dukungan dari luar negeri, tanpa ribet.', icon: COFFEE, c: '#ff5e5b' },
-  { k: 'sponsors', name: 'GitHub Sponsors', desc: 'Dukungan bulanan langsung lewat GitHub.', icon: GH, c: '#8250df' },
+  { k: 'sociabuzz', name: 'Sociabuzz', desc: 'Dukungan praktis dari HP, khusus pendukung lokal.', icon: HEART, c: '#ff8a3d' },
 ];
 const MARQ = ['Saldo otomatis', 'Pengingat jatuh tempo', 'Bukti foto nota', 'Tema terang & gelap', 'Cadangan data', 'Akses anggota & admin', 'Gratis selamanya', 'Tanpa instalasi'];
 const WORDS = ['rapi', 'transparan', 'tanpa drama', 'bebas ribet'];

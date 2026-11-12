@@ -11,7 +11,7 @@
 <br>
 <br>
 
-[![Launch KEDAS](https://img.shields.io/badge/Launch_KEDAS_%E2%86%92-355B43?style=for-the-badge)](https://kedas.vercel.app)
+[![Launch KEDAS](https://img.shields.io/badge/Launch_KEDAS_%E2%86%92-355B43?style=for-the-badge)](https://kedas.vercel.APP)
 [![Star on GitHub](https://img.shields.io/github/stars/dev-kedas/KEDAS?style=for-the-badge&logo=github&label=Star&color=1F3326)](https://github.com/dev-kedas/KEDAS)
 [![Report an issue](https://img.shields.io/badge/Report_an_issue-7B9B81?style=for-the-badge&logo=github&logoColor=white)](https://github.com/dev-kedas/KEDAS/issues/new)
 
@@ -428,12 +428,10 @@ Create your organization in under a minute and invite your members today.
 
 KEDAS is free and built in spare time. If it helps your organization, a small tip keeps it going.
 
-<a href="https://github.com/sponsors/dev-kedas"><img height="48" alt="Support on GitHub" src="https://img.shields.io/badge/Support_on_GitHub-24292F?style=for-the-badge&logo=github&logoColor=white"></a>
-
 <a href="https://saweria.co/KEDAS"><img height="48" alt="Saweria" src="https://img.shields.io/badge/Saweria-24292F?style=for-the-badge&logo=githubsponsors&logoColor=FFB020"></a>
 <a href="https://trakteer.id/kedass"><img height="48" alt="Trakteer" src="https://img.shields.io/badge/Trakteer-24292F?style=for-the-badge&logo=githubsponsors&logoColor=FF4D5E"></a>
+<a href="https://sociabuzz.com/KEDAS/support"><img height="48" alt="Sociabuzz" src="https://img.shields.io/badge/Sociabuzz-24292F?style=for-the-badge&logo=githubsponsors&logoColor=FF8A3D"></a>
 <a href="https://ko-fi.com/KEDAS"><img height="48" alt="Ko-fi" src="https://img.shields.io/badge/Ko--fi-24292F?style=for-the-badge&logo=githubsponsors&logoColor=FF5E5B"></a>
-
 <br>
 <br>
 
